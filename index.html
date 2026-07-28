@@ -17,6 +17,22 @@ header h1{font-size:1.1rem;font-weight:700}
 nav{display:flex;gap:6px;flex-wrap:wrap}
 nav button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:.95rem;font-family:inherit}
 nav button.active{background:#fff;color:var(--brand);font-weight:700}
+#menutoggle{display:none;margin-left:auto;background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 16px;border-radius:8px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer}
+.navsub{display:none}
+.navrow{display:contents}
+.navexp{display:none}
+@media (max-width:640px){
+  header h1{font-size:1rem}
+  #menutoggle{display:block}
+  nav{position:absolute;top:100%;left:12px;right:12px;flex-direction:column;flex-wrap:nowrap;background:var(--brand);border-radius:0 0 12px 12px;padding:8px;gap:5px;box-shadow:0 10px 24px rgba(0,0,0,.28);display:none;z-index:20;max-height:calc(100vh - 80px);overflow-y:auto}
+  nav.open{display:flex}
+  nav button{width:100%;text-align:left;padding:12px 16px;font-size:1.02rem;background:rgba(255,255,255,.12)}
+  nav.open .navrow{display:flex;gap:5px}
+  nav.open .navrow .navtab{flex:1;width:auto}
+  nav.open .navexp{display:flex;align-items:center;justify-content:center;flex:none;width:52px;padding:0;font-size:1.4rem;font-weight:800;background:rgba(255,255,255,.28)}
+  nav.open .navsub{display:block;padding:9px 16px 9px 34px;font-size:.94rem;background:rgba(255,255,255,.06)}
+  nav.open .navsub.active{background:#fff;color:var(--brand);font-weight:700}
+}
 main{max-width:1000px;margin:0 auto;padding:20px}
 main.wide{max-width:none;padding:14px 18px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
@@ -61,11 +77,25 @@ button.sm{padding:4px 12px;font-size:.85rem}
 .diffrow .pgchip{display:inline-block;background:#fff;border:1px solid var(--bad);color:var(--bad);border-radius:5px;padding:0 7px;margin:2px 3px 0 0;cursor:pointer;font-weight:700}
 .diffrow .pgchip:hover{background:var(--bad);color:#fff}
 .diffrow .tonotes{cursor:pointer;text-decoration:underline;font-weight:700}
+/* 差異表分頁 */
+.difftbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.difftbl th,.difftbl td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+.difftbl thead th{background:#f3f4f6;font-size:.82rem;white-space:nowrap}
+.difftbl tbody tr:nth-child(even){background:#fafbff}
+.difftbl .dc-u{text-align:center}
+.difftbl .dc-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;color:#fff;font-weight:800;font-size:.82rem}
+.difftbl .dc-old{color:var(--muted);text-decoration:line-through}
+.difftbl .dc-new{color:var(--bad);font-weight:700}
+.difftbl .dc-pg{white-space:nowrap;color:var(--brand);font-size:.82rem}
+.difftbl .dc-aff{white-space:nowrap;font-size:.82rem}
+.difftbl .dc-note{margin-top:4px;font-size:.8rem;color:#6b7280;line-height:1.5}
 .ttsbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px;background:#fafbff}
 .ttsbox select{width:100%;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.82rem}
 /* notes 重點複習 */
 .upill{min-width:34px;height:34px;border-radius:9px;border:2px solid var(--uc);background:#fff;color:var(--uc);font-weight:800;cursor:pointer;font-family:inherit;font-size:.95rem}
 .upill.on{background:var(--uc);color:#fff}
+.upills{display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:640px){.upills{display:none}}
 .kp{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;background:#fff}
 .kp-h{font-weight:700;font-size:.96rem}
 .kp-b{margin-top:6px;font-size:.92rem;color:#374151;border-top:1px dashed var(--line);padding-top:6px}
@@ -112,7 +142,8 @@ th{color:var(--muted);font-weight:600;font-size:.83rem}
 </head>
 <body>
 <header>
-  <h1>📖 資通安全概論 陪讀系統</h1>
+  <h1>📖 資通安全概論</h1>
+  <button id="menutoggle" onclick="navOpen=!navOpen;render()">☰ 選單</button>
   <nav id="nav"></nav>
 </header>
 <main id="main"></main>
@@ -139,17 +170,32 @@ function save(){localStorage.setItem(KEY,JSON.stringify(S))}
 function ustate(id){return S.units[id]||(S.units[id]={read:false,best:null})}
 
 /* ============ 導覽 ============ */
-const TABS=[['dash','🏠 儀表板'],['read','📚 閱讀'],['notes','📌 重點'],['quiz','✏️ 測驗'],['review','🔁 複習'],['stats','📊 紀錄']];
-let cur='dash', readerUnit=1, quizSession=null;
-function nav(t){if(t!=='read'&&typeof tts!=='undefined'&&tts.playing)ttsStop();cur=t;render()}
+const TABS=[['dash','🏠 儀表板'],['read','📚 閱讀'],['notes','📌 重點'],['diff','🔀 差異'],['quiz','✏️ 測驗'],['review','🔁 複習'],['stats','📊 紀錄']];
+let cur='dash', readerUnit=1, quizSession=null, navOpen=false, notesSubOpen=false;
+function nav(t){if(t!=='read'&&typeof tts!=='undefined'&&tts.playing)ttsStop();cur=t;navOpen=false;render()}
 function render(){
-  document.getElementById('nav').innerHTML=TABS.map(([id,label])=>
-    `<button class="${cur===id?'active':''}" onclick="nav('${id}')">${label}</button>`).join('');
+  const navEl=document.getElementById('nav');
+  navEl.innerHTML=TABS.map(([id,label])=>{
+    if(id==='notes'){
+      let h=`<div class="navrow">
+        <button class="navtab ${cur===id?'active':''}" onclick="nav('${id}')">${label}</button>
+        <button class="navexp" title="展開單元" onclick="notesSubOpen=!notesSubOpen;render()">${notesSubOpen?'－':'＋'}</button>
+      </div>`;
+      if(notesSubOpen)
+        h+=BOOK.units.map(u=>`<button class="navsub ${u.id===notesUnit?'active':''}" onclick="notesUnit=${u.id};nav('notes')">單元 ${u.id}　${u.title}</button>`).join('');
+      return h;
+    }
+    return `<button class="${cur===id?'active':''}" onclick="nav('${id}')">${label}</button>`;
+  }).join('');
+  navEl.className=navOpen?'open':'';
+  const mt=document.getElementById('menutoggle');
+  if(mt){const cl=(TABS.find(t=>t[0]===cur)||['','選單'])[1];mt.textContent=navOpen?'✕ 關閉':'☰ '+cl;}
   const m=document.getElementById('main');
   m.classList.toggle('wide',cur==='read');
   if(cur==='dash')m.innerHTML=vDash();
   else if(cur==='read')m.innerHTML=vRead();
   else if(cur==='notes')m.innerHTML=vNotes();
+  else if(cur==='diff')m.innerHTML=vDiff();
   else if(cur==='quiz')m.innerHTML=vQuiz();
   else if(cur==='review')m.innerHTML=vReview();
   else m.innerHTML=vStats();
@@ -191,6 +237,46 @@ function vDash(){
   return html+'</div>';
 }
 function toggleRead(id){const st=ustate(id);st.read=!st.read;save();render()}
+
+/* ============ 差異表（簡報 11504／現行 vs 教材 11501） ============ */
+// 逐項：簡報（較新課程簡報 11504／現行法規）對教材原書（11501）所做的修正。重點與題庫皆已採「新值」為主、教材舊值降為紅字附註。
+const DIFFS=[
+  {u:1, item:'施行細則 修正日期', old:'110.8.23', neo:'115.1.5', page:'p.24', aff:'重點'},
+  {u:1, item:'責任等級分級辦法 修正日期', old:'110.8.23', neo:'115.1.7', page:'p.24', aff:'重點'},
+  {u:1, item:'個人資料保護法 修正日期', old:'112.5.31', neo:'114.11.11', page:'p.24 / p.59', aff:'重點'},
+  {u:2, item:'責任等級 核定／提交週期', old:'每 2 年', neo:'每 3 年', page:'p.48', aff:'重點＋題庫', note:'分級辦法§3 修正。⚠ 官方自我評量範例曾以「每 3 年」為誘答（正解每 2 年）；若考題照舊教材則答每 2 年。'},
+  {u:2, item:'資安法子法 部數', old:'6 部', neo:'8 部', page:'p.41', aff:'重點＋題庫', note:'新增「危害國家資通安全產品審查辦法」「國家資通安全會報設置辦法」；「獎懲辦法」正名為「公務機關所屬人員辦理資通安全事項作業辦法」。'},
+  {u:2, item:'人工智慧基本法（新法）', old:'（教材無）', neo:'115/1/14 公布施行', page:'補充', aff:'重點＋題庫', note:'主管機關國科會；七大原則；政府使用 AI 須風險評估＋內控。'},
+  {u:4, item:'防護基準 控制措施總數', old:'171 項（高78／中58／普35）', neo:'170 項（高75／中55／普40）', page:'p.98', aff:'重點＋題庫', note:'分級辦法附表十修正。招牌考點，亦於單元 5 逐項展開。'},
+  {u:4, item:'識別與鑑別 子類數', old:'5 子類', neo:'3 子類', page:'p.98', aff:'重點', note:'「內部／非內部使用者」合併為「使用者之識別與鑑別」（另二＝身分驗證管理、鑑別資訊保護）。'},
+  {u:4, item:'資安治理成熟度評估 對象', old:'僅公務機關', neo:'公務機關及關鍵基礎設施提供者', page:'p.122', aff:'重點＋題庫'},
+  {u:7, item:'OWASP TOP 10 版本', old:'2021 版', neo:'2025 版', page:'p.248', aff:'重點＋題庫', note:'A03 軟體供應鏈失效、A09 記錄與告警失效、A10 特殊情況處理不當等（順序與名稱調整）。'},
+  {u:7, item:'資安健診 檢視項目', old:'5 類', neo:'6 項', page:'p.270', aff:'重點＋題庫', note:'新增「核心資通系統資料庫安全檢視」。'},
+  {u:9, item:'通報應變演練辦法 條號（通報作業規範）', old:'§9 公務／§15 非公務', neo:'§4', page:'p.340', aff:'重點', note:'辦法 115/1/5 整部重編號。'},
+  {u:9, item:'通報應變演練辦法 條號（應變作業規範）', old:'§10 公務／§16 非公務', neo:'§5', page:'p.341', aff:'重點'},
+];
+function vDiff(){
+  const rows=DIFFS.map(d=>`<tr>
+    <td class="dc-u"><span class="dc-badge" style="background:${UCOLOR[d.u-1]}">${d.u}</span></td>
+    <td>${d.item}${d.note?`<div class="dc-note">${d.note}</div>`:''}</td>
+    <td class="dc-old">${d.old}</td>
+    <td class="dc-new">${d.neo}</td>
+    <td class="dc-pg">${d.page}</td>
+    <td class="dc-aff">${d.aff}</td>
+  </tr>`).join('');
+  const nUnits=new Set(DIFFS.map(d=>d.u)).size;
+  return `<div class="card">
+    <h2>🔀 教材 vs 較新簡報 差異表</h2>
+    <p class="muted" style="margin:6px 0 10px">簡報（11504／現行法規）對教材原書（11501）的修正共 <b>${DIFFS.length}</b> 項，橫跨 <b>${nUnits}</b> 個單元。重點與題庫皆已採「<b>現行新值</b>」為主答案、教材舊值保留為紅字附註。</p>
+    <div class="readnote" style="margin-bottom:12px">⚠ 重要：本系統依「新法為主」設定答案。<b>若你的職能考試是綁教材（11501）出題，招牌考點（如防護基準 171 項、責任等級每 2 年）正解可能仍是教材舊值</b>——請以官方最新自我評量測驗再確認。</div>
+    <div style="overflow-x:auto">
+    <table class="difftbl">
+      <thead><tr><th>單元</th><th>項目</th><th>教材 11501（原）</th><th>現行 11504（採用）</th><th>書頁</th><th>影響</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <p class="muted" style="margin-top:10px">另有多處「補充內容」（綠底，如單元 6 各工具適用對象、單元 1 CIA 記憶例）為簡報加值、非教材衝突，直接見各單元 📌重點。教材原文（book.pdf、units.js）與題庫干擾選項一律未動。</p>
+  </div>`;
+}
 
 /* ============ 閱讀器（PDF 電子書＋章節書籤） ============ */
 const PDF_OFFSET=2; // PDF 頁 = 書頁 + 2
@@ -311,7 +397,7 @@ function vNotes(){
         <label class="row" style="gap:6px;font-size:.9rem;cursor:pointer">
           <input type="checkbox" ${recallMode?'checked':''} onchange="recallMode=this.checked;nav('notes')">
           🧠 回想模式（先想再看）</label></div></div>
-    <div class="row" style="margin-top:10px">${pills}</div></div>`;
+    <div style="margin-top:10px"><div class="upills">${pills}</div></div></div>`;
   if(!n){
     html+=`<div class="card" style="text-align:center;padding:30px">
       <div style="font-size:1.6rem">🌱</div>
