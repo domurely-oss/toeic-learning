@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>資通安全概論 — 陪讀系統</title>
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+  --brand:#1d4ed8; --brand-soft:#dbeafe; --ok:#059669; --ok-soft:#d1fae5;
+  --bad:#dc2626; --bad-soft:#fee2e2; --warn:#d97706; --warn-soft:#fef3c7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+header{background:var(--brand);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+header h1{font-size:1.1rem;font-weight:700}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:.95rem;font-family:inherit}
+nav button.active{background:#fff;color:var(--brand);font-weight:700}
+#menutoggle{display:none;margin-left:auto;background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 16px;border-radius:8px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer}
+@media (max-width:640px){
+  header h1{font-size:1rem}
+  #menutoggle{display:block}
+  nav{position:absolute;top:100%;left:12px;right:12px;flex-direction:column;flex-wrap:nowrap;background:var(--brand);border-radius:0 0 12px 12px;padding:8px;gap:5px;box-shadow:0 10px 24px rgba(0,0,0,.28);display:none;z-index:20}
+  nav.open{display:flex}
+  nav button{width:100%;text-align:left;padding:12px 16px;font-size:1.02rem;background:rgba(255,255,255,.12)}
+}
+main{max-width:1000px;margin:0 auto;padding:20px}
+main.wide{max-width:none;padding:14px 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+h2{font-size:1.05rem;margin-bottom:10px}
+h3{font-size:1rem;margin-bottom:6px}
+.muted{color:var(--muted);font-size:.88rem}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.78rem;font-weight:700}
+.b-blue{background:var(--brand-soft);color:var(--brand)} .b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-bad{background:var(--bad-soft);color:var(--bad)} .b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-gray{background:#f3f4f6;color:var(--muted)}
+button.act{background:var(--brand);color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:.95rem;font-family:inherit}
+button.act:disabled{opacity:.4;cursor:default}
+button.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.92rem;font-family:inherit}
+button.sm{padding:4px 12px;font-size:.85rem}
+.bar{height:8px;background:#eef0f4;border-radius:99px;overflow:hidden;margin:8px 0}
+.bar>div{height:100%;background:var(--brand);border-radius:99px;transition:width .3s}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spread{justify-content:space-between}
+/* reader */
+.reader{display:grid;grid-template-columns:240px 1fr;gap:12px}
+.toc{position:sticky;top:70px;align-self:start;max-height:calc(100vh - 90px);overflow-y:auto;padding:12px}
+.bm{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:6px;border:1px solid var(--line);border-left:6px solid var(--bc,#1d4ed8);border-radius:8px;background:#fff;cursor:pointer;font-weight:700;font-size:.9rem;transition:transform .12s}
+.bm:hover{transform:translateX(3px)}
+.bm.open{background:var(--brand-soft);border-color:var(--brand);border-left-color:var(--bc)}
+.bm-no{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:6px;background:var(--bc,#1d4ed8);color:#fff;font-size:.78rem}
+.bm-s{display:flex;justify-content:space-between;gap:6px;padding:5px 8px 5px 24px;border-radius:6px;font-size:.86rem;color:var(--ink);cursor:pointer}
+.bm-s:hover{background:var(--brand-soft)}
+.bm-s.cur{background:var(--brand-soft);font-weight:700}
+.bm-s .pg{color:var(--muted);font-size:.78rem;white-space:nowrap}
+.pdfwrap{padding:0;overflow:hidden}
+.pdfwrap iframe{display:block;width:100%;height:calc(100vh - 150px);border:none}
+/* 讀物選擇（教材原書 / 各天簡報）＋說明橫幅 */
+.docsel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.docbtn{background:#fff;border:1px solid var(--line);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.88rem}
+.docbtn.on{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700}
+.readnote{background:var(--warn-soft);border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:.86rem;line-height:1.6}
+.readnote.slide{background:var(--brand-soft);border-color:#93c5fd}
+/* 章節列「教材已更新」標示 */
+.diffbadge{background:var(--bad);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:6px;white-space:nowrap}
+.diffrow{font-size:.8rem;color:var(--bad);background:var(--bad-soft);border:1px solid #fca5a5;border-radius:6px;padding:5px 8px;margin:4px 0 6px 24px;line-height:1.7}
+.diffrow .pgchip{display:inline-block;background:#fff;border:1px solid var(--bad);color:var(--bad);border-radius:5px;padding:0 7px;margin:2px 3px 0 0;cursor:pointer;font-weight:700}
+.diffrow .pgchip:hover{background:var(--bad);color:#fff}
+.diffrow .tonotes{cursor:pointer;text-decoration:underline;font-weight:700}
+/* 差異表分頁 */
+.difftbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.difftbl th,.difftbl td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+.difftbl thead th{background:#f3f4f6;font-size:.82rem;white-space:nowrap}
+.difftbl tbody tr:nth-child(even){background:#fafbff}
+.difftbl .dc-u{text-align:center}
+.difftbl .dc-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;color:#fff;font-weight:800;font-size:.82rem}
+.difftbl .dc-old{color:var(--muted);text-decoration:line-through}
+.difftbl .dc-new{color:var(--bad);font-weight:700}
+.difftbl .dc-pg{white-space:nowrap;color:var(--brand);font-size:.82rem}
+.difftbl .dc-aff{white-space:nowrap;font-size:.82rem}
+.difftbl .dc-note{margin-top:4px;font-size:.8rem;color:#6b7280;line-height:1.5}
+.ttsbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px;background:#fafbff}
+.ttsbox select{width:100%;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:.82rem}
+/* notes 重點複習 */
+.upill{min-width:34px;height:34px;border-radius:9px;border:2px solid var(--uc);background:#fff;color:var(--uc);font-weight:800;cursor:pointer;font-family:inherit;font-size:.95rem}
+.upill.on{background:var(--uc);color:#fff}
+.upills{display:flex;gap:6px;flex-wrap:wrap}
+.uselect{display:none;width:100%;padding:10px 12px;border:1.5px solid var(--brand);border-radius:9px;font-family:inherit;font-size:1rem;font-weight:700;color:var(--brand);background:#fff}
+@media (max-width:640px){.upills{display:none}.uselect{display:block}}
+.kp{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;background:#fff}
+.kp-h{font-weight:700;font-size:.96rem}
+.kp-b{margin-top:6px;font-size:.92rem;color:#374151;border-top:1px dashed var(--line);padding-top:6px}
+.kp-b .kpl{margin:1px 0;white-space:pre-wrap}
+.kp-b .kpl.ind{padding-left:1.5em}
+.kp.recall{cursor:pointer}
+.kp.recall .kp-b{display:none}
+.kp.recall.show .kp-b{display:block}
+.kp.recall:not(.show) .kp-h::after{content:"　👆 點我回想完看內容";font-weight:400;font-size:.78rem;color:var(--muted)}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.page-tag{display:inline-block;background:#eef2ff;color:var(--brand);font-size:.75rem;padding:1px 9px;border-radius:6px;margin:14px 0 4px;font-weight:700}
+.ptext p{margin-bottom:.6em;font-size:1rem}
+.ptext p.bullet{padding-left:1.2em}
+/* 重點標色快捷 class（在 notes.js 內文直接用 <span class="..."> 或 <mark>） */
+.kp-b mark,.kp-b .hl{background:#fef08a;padding:0 2px;border-radius:3px}   /* 黃底螢光 */
+.kp-b .hl-g{background:#bbf7d0;padding:0 2px;border-radius:3px}            /* 綠底 */
+.kp-b .hl-r{background:#fecaca;padding:0 2px;border-radius:3px}           /* 紅底（陷阱/易錯） */
+.kp-b .c-r{color:#dc2626;font-weight:700}                                /* 紅字 */
+.kp-b .c-b{color:#2563eb;font-weight:700}                                /* 藍字 */
+/* 互動式螢光筆（標記模式）使用者標記 */
+.uhl{border-radius:3px;padding:0 1px}
+.uhl-y{background:#fde68a}.uhl-g{background:#bbf7d0}.uhl-b{background:#bfdbfe}.uhl-p{background:#fbcfe8}
+.marking .kp-b{cursor:text}
+#hlbar{position:fixed;z-index:9999;display:none;gap:5px;padding:5px 7px;background:#1f2937;border-radius:9px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#hlbar button{width:22px;height:22px;border:2px solid #fff;border-radius:50%;cursor:pointer;padding:0;font-size:.8rem;line-height:1}
+#hlbar button.er{background:#fff;color:#1f2937;font-weight:800;border-color:#9ca3af}
+/* quiz */
+.opt{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:8px;cursor:pointer;font-size:.97rem;font-family:inherit}
+.opt:hover{border-color:var(--brand)}
+.opt.sel-ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.sel-bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt.reveal{border-color:var(--ok);border-style:dashed}
+.opt.picked{border-color:var(--brand);background:var(--brand-soft)}
+.opt:disabled{cursor:default}
+.expl{border-left:4px solid var(--brand);background:var(--brand-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin-top:10px;font-size:.93rem}
+.qmeta{font-size:.85rem;color:var(--muted);margin-bottom:8px}
+.anskey{background:var(--ok-soft);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:.95rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:.83rem}
+.due{color:var(--bad);font-weight:700}
+@media(max-width:760px){.reader{grid-template-columns:1fr}.toc{position:static;max-height:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📖 資通安全概論 陪讀系統</h1>
+  <button id="menutoggle" onclick="navOpen=!navOpen;render()">☰ 選單</button>
+  <nav id="nav"></nav>
+</header>
+<main id="main"></main>
+
+<script>
+// 帶時間戳記載入資料檔，避免瀏覽器快取舊題庫/書本資料（本機伺服器，重載無感）
+document.write('<script src="data/units.js?v='+Date.now()+'"><\/script>');
+document.write('<script src="data/quiz.js?v='+Date.now()+'"><\/script>');
+document.write('<script src="data/notes.js?v='+Date.now()+'"><\/script>');
+</script>
+<script>
+/* ============ 狀態（localStorage） ============ */
+const KEY='iics-study-v1';
+const today=()=>new Date().toISOString().slice(0,10);
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
+let S=load();
+if(!S.hl)S.hl={};   // hl[hlid]=[{start,end,c}] 使用者螢光筆標記（hlid=「單元|小節|點序」）
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return s}catch(e){}
+  return {units:{}, wrong:[], history:[], log:[], hl:{}};
+  // units[id]={read:bool, best:percent} ; wrong=[{uid,qi,due,streak}] ; history=[{date,uid,score,total}]
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function ustate(id){return S.units[id]||(S.units[id]={read:false,best:null})}
+
+/* ============ 導覽 ============ */
+const TABS=[['dash','🏠 儀表板'],['read','📚 閱讀'],['notes','📌 重點'],['diff','🔀 差異'],['quiz','✏️ 測驗'],['review','🔁 複習'],['stats','📊 紀錄']];
+let cur='dash', readerUnit=1, quizSession=null, navOpen=false;
+function nav(t){if(t!=='read'&&typeof tts!=='undefined'&&tts.playing)ttsStop();cur=t;navOpen=false;render()}
+function render(){
+  const navEl=document.getElementById('nav');
+  navEl.innerHTML=TABS.map(([id,label])=>
+    `<button class="${cur===id?'active':''}" onclick="nav('${id}')">${label}</button>`).join('');
+  navEl.className=navOpen?'open':'';
+  const mt=document.getElementById('menutoggle');
+  if(mt){const cl=(TABS.find(t=>t[0]===cur)||['','選單'])[1];mt.textContent=navOpen?'✕ 關閉':'☰ '+cl;}
+  const m=document.getElementById('main');
+  m.classList.toggle('wide',cur==='read');
+  if(cur==='dash')m.innerHTML=vDash();
+  else if(cur==='read')m.innerHTML=vRead();
+  else if(cur==='notes')m.innerHTML=vNotes();
+  else if(cur==='diff')m.innerHTML=vDiff();
+  else if(cur==='quiz')m.innerHTML=vQuiz();
+  else if(cur==='review')m.innerHTML=vReview();
+  else m.innerHTML=vStats();
+  if(cur==='read')jumpRestore();
+  if(cur==='notes'){applyAllHighlights();document.body.classList.toggle('marking',markMode);}
+  else document.body.classList.remove('marking');
+}
+
+/* ============ 儀表板 ============ */
+function dueWrongs(){return S.wrong.filter(w=>w.due<=today())}
+function vDash(){
+  const readN=BOOK.units.filter(u=>ustate(u.id).read).length;
+  const quizN=BOOK.units.filter(u=>ustate(u.id).best!==null).length;
+  const due=dueWrongs().length;
+  let html=`<div class="card">
+    <div class="row spread"><h2>整體進度</h2><span class="muted">${today()}</span></div>
+    <div class="row" style="gap:28px">
+      <div>已讀單元 <b style="font-size:1.4rem">${readN}</b>/9</div>
+      <div>已測單元 <b style="font-size:1.4rem">${quizN}</b>/9</div>
+      <div>待複習錯題 <b style="font-size:1.4rem" class="${due?'due':''}">${due}</b></div>
+    </div>
+    <div class="bar"><div style="width:${Math.round(readN/9*100)}%"></div></div>
+    ${due?`<button class="act" onclick="startReview()">🔥 立即複習 ${due} 題到期錯題</button>`:''}
+  </div><div class="grid">`;
+  for(const u of BOOK.units){
+    const st=ustate(u.id), hasQuiz=!!(QUIZ[u.id]&&QUIZ[u.id].length);
+    const status=st.read?(st.best!==null?`<span class="badge b-ok">已讀・最佳 ${st.best}%</span>`:'<span class="badge b-blue">已讀</span>')
+      :'<span class="badge b-gray">未開始</span>';
+    html+=`<div class="card">
+      <div class="row spread"><h3>單元 ${u.id}</h3>${status}</div>
+      <div style="margin-bottom:6px">${u.title}</div>
+      <div class="muted">書頁 p.${u.pages}　${hasQuiz?`題庫 ${QUIZ[u.id].length} 題`:'題庫待生成'}</div>
+      <div class="row" style="margin-top:10px">
+        <button class="ghost sm" onclick="openUnit(${u.id})">閱讀</button>
+        ${hasQuiz?`<button class="ghost sm" onclick="startQuiz(${u.id})">考我</button>`:''}
+        <button class="ghost sm" onclick="toggleRead(${u.id})">${st.read?'標為未讀':'標為已讀'}</button>
+      </div></div>`;
+  }
+  return html+'</div>';
+}
+function toggleRead(id){const st=ustate(id);st.read=!st.read;save();render()}
+
+/* ============ 差異表（簡報 11504／現行 vs 教材 11501） ============ */
+// 逐項：簡報（較新課程簡報 11504／現行法規）對教材原書（11501）所做的修正。重點與題庫皆已採「新值」為主、教材舊值降為紅字附註。
+const DIFFS=[
+  {u:1, item:'施行細則 修正日期', old:'110.8.23', neo:'115.1.5', page:'p.24', aff:'重點'},
+  {u:1, item:'責任等級分級辦法 修正日期', old:'110.8.23', neo:'115.1.7', page:'p.24', aff:'重點'},
+  {u:1, item:'個人資料保護法 修正日期', old:'112.5.31', neo:'114.11.11', page:'p.24 / p.59', aff:'重點'},
+  {u:2, item:'責任等級 核定／提交週期', old:'每 2 年', neo:'每 3 年', page:'p.48', aff:'重點＋題庫', note:'分級辦法§3 修正。⚠ 官方自我評量範例曾以「每 3 年」為誘答（正解每 2 年）；若考題照舊教材則答每 2 年。'},
+  {u:2, item:'資安法子法 部數', old:'6 部', neo:'8 部', page:'p.41', aff:'重點＋題庫', note:'新增「危害國家資通安全產品審查辦法」「國家資通安全會報設置辦法」；「獎懲辦法」正名為「公務機關所屬人員辦理資通安全事項作業辦法」。'},
+  {u:2, item:'人工智慧基本法（新法）', old:'（教材無）', neo:'115/1/14 公布施行', page:'補充', aff:'重點＋題庫', note:'主管機關國科會；七大原則；政府使用 AI 須風險評估＋內控。'},
+  {u:4, item:'防護基準 控制措施總數', old:'171 項（高78／中58／普35）', neo:'170 項（高75／中55／普40）', page:'p.98', aff:'重點＋題庫', note:'分級辦法附表十修正。招牌考點，亦於單元 5 逐項展開。'},
+  {u:4, item:'識別與鑑別 子類數', old:'5 子類', neo:'3 子類', page:'p.98', aff:'重點', note:'「內部／非內部使用者」合併為「使用者之識別與鑑別」（另二＝身分驗證管理、鑑別資訊保護）。'},
+  {u:4, item:'資安治理成熟度評估 對象', old:'僅公務機關', neo:'公務機關及關鍵基礎設施提供者', page:'p.122', aff:'重點＋題庫'},
+  {u:7, item:'OWASP TOP 10 版本', old:'2021 版', neo:'2025 版', page:'p.248', aff:'重點＋題庫', note:'A03 軟體供應鏈失效、A09 記錄與告警失效、A10 特殊情況處理不當等（順序與名稱調整）。'},
+  {u:7, item:'資安健診 檢視項目', old:'5 類', neo:'6 項', page:'p.270', aff:'重點＋題庫', note:'新增「核心資通系統資料庫安全檢視」。'},
+  {u:9, item:'通報應變演練辦法 條號（通報作業規範）', old:'§9 公務／§15 非公務', neo:'§4', page:'p.340', aff:'重點', note:'辦法 115/1/5 整部重編號。'},
+  {u:9, item:'通報應變演練辦法 條號（應變作業規範）', old:'§10 公務／§16 非公務', neo:'§5', page:'p.341', aff:'重點'},
+];
+function vDiff(){
+  const rows=DIFFS.map(d=>`<tr>
+    <td class="dc-u"><span class="dc-badge" style="background:${UCOLOR[d.u-1]}">${d.u}</span></td>
+    <td>${d.item}${d.note?`<div class="dc-note">${d.note}</div>`:''}</td>
+    <td class="dc-old">${d.old}</td>
+    <td class="dc-new">${d.neo}</td>
+    <td class="dc-pg">${d.page}</td>
+    <td class="dc-aff">${d.aff}</td>
+  </tr>`).join('');
+  const nUnits=new Set(DIFFS.map(d=>d.u)).size;
+  return `<div class="card">
+    <h2>🔀 教材 vs 較新簡報 差異表</h2>
+    <p class="muted" style="margin:6px 0 10px">簡報（11504／現行法規）對教材原書（11501）的修正共 <b>${DIFFS.length}</b> 項，橫跨 <b>${nUnits}</b> 個單元。重點與題庫皆已採「<b>現行新值</b>」為主答案、教材舊值保留為紅字附註。</p>
+    <div class="readnote" style="margin-bottom:12px">⚠ 重要：本系統依「新法為主」設定答案。<b>若你的職能考試是綁教材（11501）出題，招牌考點（如防護基準 171 項、責任等級每 2 年）正解可能仍是教材舊值</b>——請以官方最新自我評量測驗再確認。</div>
+    <div style="overflow-x:auto">
+    <table class="difftbl">
+      <thead><tr><th>單元</th><th>項目</th><th>教材 11501（原）</th><th>現行 11504（採用）</th><th>書頁</th><th>影響</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <p class="muted" style="margin-top:10px">另有多處「補充內容」（綠底，如單元 6 各工具適用對象、單元 1 CIA 記憶例）為簡報加值、非教材衝突，直接見各單元 📌重點。教材原文（book.pdf、units.js）與題庫干擾選項一律未動。</p>
+  </div>`;
+}
+
+/* ============ 閱讀器（PDF 電子書＋章節書籤） ============ */
+const PDF_OFFSET=2; // PDF 頁 = 書頁 + 2
+const UCOLOR=['#1d4ed8','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777','#475569','#b45309'];
+let jumpPage=null, pdfMode=true, curPage=null, readDoc='book';
+// 每個單元對應的較新課程簡報 PDF 與該單元起始投影片頁（讀者以左側章節選單元即可）
+const UNIT_SLIDE={
+  1:{f:'slide_day1.pdf',p:7},  2:{f:'slide_day1.pdf',p:20},
+  3:{f:'slide_day1.pdf',p:60}, 4:{f:'slide_day1.pdf',p:92},
+  5:{f:'slide_day2.pdf',p:2},  6:{f:'slide_day2.pdf',p:90},
+  7:{f:'slide_day3.pdf',p:2},  8:{f:'slide_day3.pdf',p:88},
+  9:{f:'slide_day3.pdf',p:112},
+};
+// 找出某單元「教材已更新」的重點（附註含版本號 11501/11504 或紅底警示者），回傳頁碼清單
+function unitDiffs(uid){
+  const n=window.NOTES&&NOTES[String(uid)]; if(!n)return [];
+  const out=[], seen=new Set();
+  for(const sec of n.sections)for(const pt of sec.points){
+    if(!/1150[14]|hl-r/.test(pt.b))continue;
+    const m=pt.h.match(/p\.(\d+)/);
+    const pg=m?+m[1]:sec.page;
+    if(!seen.has(pg)){seen.add(pg);out.push(pg);}
+  }
+  return out.sort((a,b)=>a-b);
+}
+function vRead(){
+  const u=BOOK.units.find(x=>x.id===readerUnit);
+  if(curPage===null)curPage=u.sections[0].page;
+  const isBook = readDoc==='book';
+  // 讀物選擇列（教材原書 / 課程簡報，簡報以左側章節選單元）
+  const sel=`<div class="docsel">
+    <button class="docbtn ${isBook?'on':''}" onclick="readDoc='book';nav('read')">📖 教材原書</button>
+    <button class="docbtn ${!isBook?'on':''}" onclick="readDoc='slide';nav('read')">📊 課程簡報（較新）</button></div>`;
+  // 說明橫幅
+  const notice = isBook
+    ? `<div class="readnote">📖 這是<b>原始教材電子書</b>。部分法規／數字已依較新課程簡報更新——左側章節有 <span style="color:#dc2626">⚠ 更新</span> 標記的單元即有差異，點開見更新頁碼，新值見 <b>📌重點</b> 紅字；上方可切「📊 課程簡報」對照。</div>`
+    : `<div class="readnote slide">📊 <b>較新課程簡報</b>（目前：單元 ${readerUnit} ${u.title}）。<b>點左側章節即切換對應單元的簡報</b>；與教材原書並存供對照。</div>`;
+  let toc=`<div class="row spread" style="margin-bottom:4px">
+    ${isBook?`<button class="ghost sm" onclick="pdfMode=!pdfMode;nav('read')">${pdfMode?'切換文字版':'切換 PDF 版'}</button>`:'<span class="muted" style="font-size:.82rem">👈 點章節切換單元簡報</span>'}
+    <button class="ghost sm" onclick="toggleRead(${u.id})">${ustate(u.id).read?'✓ 已讀':'標為已讀'}</button></div>
+    ${isBook?`<div id="ttsbox" class="ttsbox">${ttsBoxHTML()}</div>`:''}`;
+  for(const uu of BOOK.units){
+    const c=UCOLOR[uu.id-1];
+    const diffs=unitDiffs(uu.id);
+    const badge=diffs.length?`<span class="diffbadge">⚠ 更新 ${diffs.length}</span>`:'';
+    toc+=`<div class="bm ${uu.id===readerUnit?'open':''}" style="--bc:${c}" onclick="openUnit(${uu.id})">
+      <span class="bm-no" style="background:${c}">${uu.id}</span><span>${uu.title}</span>${badge}</div>`;
+    if(uu.id===readerUnit && isBook){
+      if(diffs.length)
+        toc+=`<div class="diffrow">⚠ 教材已更新處（PDF 為原值，新值見 <span class="tonotes" onclick="notesUnit=${uu.id};nav('notes')">📌重點紅字</span>）：`
+          +diffs.map(p=>`<span class="pgchip" onclick="goPage(${p})">p.${p}</span>`).join('')+`</div>`;
+      toc+=uu.sections.map(s=>`<div class="bm-s ${s.page===curPage?'cur':''}" onclick="goPage(${s.page})">
+        <span>${s.no} ${s.title}</span><span class="pg">p.${s.page}</span></div>`).join('');
+    }
+  }
+  let body;
+  if(!isBook){
+    const sd=UNIT_SLIDE[readerUnit]||UNIT_SLIDE[1];
+    body=`<div class="card pdfwrap"><iframe id="pdfframe" src="${sd.f}#page=${sd.p}&zoom=page-width"></iframe></div>`;
+  }else if(pdfMode){
+    body=`<div class="card pdfwrap"><iframe id="pdfframe" src="book.pdf#page=${curPage+PDF_OFFSET}&zoom=page-width"></iframe></div>`;
+  }else{
+    body=`<div class="card"><h2 style="margin-bottom:10px">單元 ${u.id}　${u.title}</h2>`;
+    for(const pg of u.content){
+      if(!pg.paras.length)continue;
+      body+=`<div class="page-tag" id="pg${pg.p}">書頁 p.${pg.p}</div><div class="ptext">`
+        +pg.paras.map(t=>`<p class="${/^[¼h]|^\(\d+\)/.test(t)?'bullet':''}">${esc(t)}</p>`).join('')+'</div>';
+    }
+    body+='</div>';
+  }
+  return `${sel}${notice}<div class="reader"><div class="card toc">${toc}</div>${body}</div>`;
+}
+function openUnit(id){
+  if(tts.playing)ttsStop();
+  readerUnit=id;
+  curPage=BOOK.units.find(u=>u.id===id).sections[0].page;
+  if(pdfMode)nav('read');else{jumpPage=curPage;nav('read')}
+}
+function goPage(p){
+  if(tts.playing)ttsStop();
+  curPage=p;
+  if(pdfMode)nav('read'); // 重繪：書籤目前位置標記更新，iframe src 帶入新頁碼
+  else{jumpPage=p;nav('read')}
+}
+function jumpTo(p){curPage=p;jumpPage=p;nav('read')}
+function jumpRestore(){if(!pdfMode&&jumpPage){const el=document.getElementById('pg'+jumpPage);if(el)el.scrollIntoView({behavior:'smooth'});jumpPage=null}}
+
+/* ============ 重點複習 ============ */
+let notesUnit=1, recallMode=false, markMode=false, curSel=null;
+// 將重點內容逐行渲染：「標籤：」（行尾為冒號）為標頭齊頭，其下項目縮排一個字；
+// 行內「標籤：內容」或一般敘述句維持齊頭。
+function fmtBody(b){
+  b=b.replace(/。\s*§/g,'。\n§');                       // 條文摘要：每個 §條文 自成一行
+  const lines=b.split('\n');
+  const isHeader=l=>/：$/.test(l);                       // 行尾冒號＝清單標頭
+  const isTopLabel=l=>/^[^：＝（）「」『』\n]{1,16}：/.test(l); // 行內標籤＋內容＝頂層
+  let inList=false, out='';
+  for(const l of lines){
+    let cls='kpl';
+    if(isHeader(l)) inList=true;
+    else if(isTopLabel(l)) inList=false;
+    else if(inList) cls='kpl ind';
+    out+=`<div class="${cls}">${l}</div>`;   // 內文允許寫 HTML（標色/底色），不跳脫
+  }
+  return out;
+}
+function vNotes(){
+  const pills=BOOK.units.map(u=>
+    `<button class="upill ${u.id===notesUnit?'on':''}" style="--uc:${UCOLOR[u.id-1]}" title="${u.title}"
+      onclick="notesUnit=${u.id};nav('notes')">${u.id}</button>`).join('');
+  const uSelect=`<select class="uselect" onchange="notesUnit=+this.value;nav('notes')">`+
+    BOOK.units.map(u=>`<option value="${u.id}" ${u.id===notesUnit?'selected':''}>單元 ${u.id}　${u.title}</option>`).join('')+`</select>`;
+  const u=BOOK.units.find(x=>x.id===notesUnit), n=window.NOTES&&NOTES[notesUnit];
+  let html=`<div class="card"><div class="row spread">
+      <h2>📌 重點複習　單元 ${u.id}　${u.title}</h2>
+      <div class="row" style="gap:14px">
+        <label class="row" style="gap:6px;font-size:.9rem;cursor:pointer">
+          <input type="checkbox" ${markMode?'checked':''} onchange="markMode=this.checked;hideBar();nav('notes')">
+          ✏️ 標記模式（選字上色）</label>
+        <label class="row" style="gap:6px;font-size:.9rem;cursor:pointer">
+          <input type="checkbox" ${recallMode?'checked':''} onchange="recallMode=this.checked;nav('notes')">
+          🧠 回想模式（先想再看）</label></div></div>
+    <div style="margin-top:10px"><div class="upills">${pills}</div>${uSelect}</div></div>`;
+  if(!n){
+    html+=`<div class="card" style="text-align:center;padding:30px">
+      <div style="font-size:1.6rem">🌱</div>
+      <div>本單元重點尚未生成</div>
+      <div class="muted" style="margin-top:6px">回到 Claude 對話說「<b>生成單元${notesUnit}重點</b>」，整理好會自動出現在這裡。</div></div>`;
+    return html;
+  }
+  for(const sec of n.sections){
+    html+=`<div class="card"><div class="sec-head">
+        <h3>${sec.no}　${sec.title}</h3>
+        <button class="ghost sm" onclick="gotoBook(${notesUnit},${sec.page})">📖 翻到原文 p.${sec.page}</button></div>`;
+    sec.points.forEach((p,i)=>{
+      html+=`<div class="kp ${recallMode?'recall':''}" ${recallMode?`onclick="this.classList.toggle('show')"`:''}>
+        <div class="kp-h">${p.h}</div><div class="kp-b" data-hlid="${notesUnit}|${sec.no}|${i}">${fmtBody(p.b)}</div></div>`;
+    });
+    html+='</div>';
+  }
+  html+=`<div class="card muted" style="font-size:.85rem">⭐＝測驗常考點。看完重點建議直接到「✏️ 測驗」考一輪，答錯會自動進複習排程。</div>`;
+  return html;
+}
+function gotoBook(uid,page){if(tts.playing)ttsStop();readerUnit=uid;curPage=page;pdfMode=true;cur='read';render()}
+
+/* ============ 互動式螢光筆（標記模式，存 localStorage S.hl） ============ */
+const HLPAL=[['y','#fde68a','黃'],['g','#bbf7d0','綠'],['b','#bfdbfe','藍'],['p','#fbcfe8','粉']];
+// 依 S.hl 把每個 kp-b 的文字範圍包成 <span class="uhl uhl-X">
+function applyAllHighlights(){
+  document.querySelectorAll('.kp-b[data-hlid]').forEach(el=>{
+    const ranges=S.hl[el.dataset.hlid];
+    if(ranges&&ranges.length)hlPaint(el,ranges);
+  });
+}
+function hlPaint(el,ranges){
+  const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+  const nodes=[]; let pos=0;
+  while(walker.nextNode()){const n=walker.currentNode;nodes.push({node:n,start:pos,end:pos+n.length});pos+=n.length;}
+  for(const it of nodes){
+    const segs=[];
+    for(const r of ranges){const s=Math.max(r.start,it.start),e=Math.min(r.end,it.end);if(s<e)segs.push({s:s-it.start,e:e-it.start,c:r.c});}
+    if(!segs.length)continue;
+    segs.sort((a,b)=>a.s-b.s);
+    const text=it.node.textContent, frag=document.createDocumentFragment(); let cur=0;
+    for(const sg of segs){
+      if(sg.s>cur)frag.appendChild(document.createTextNode(text.slice(cur,sg.s)));
+      const sp=document.createElement('span'); sp.className='uhl uhl-'+sg.c; sp.textContent=text.slice(sg.s,sg.e); frag.appendChild(sp);
+      cur=Math.max(cur,sg.e);
+    }
+    if(cur<text.length)frag.appendChild(document.createTextNode(text.slice(cur)));
+    it.node.parentNode.replaceChild(frag,it.node);
+  }
+}
+// 取得目前選取相對於 container 純文字的起訖位置（uhl span 不含字元，offset 與儲存值一致）
+function getSelOffsets(container){
+  const sel=window.getSelection(); if(!sel||!sel.rangeCount)return null;
+  const range=sel.getRangeAt(0);
+  if(!container.contains(range.startContainer)||!container.contains(range.endContainer))return null;
+  const pre=range.cloneRange(); pre.selectNodeContents(container); pre.setEnd(range.startContainer,range.startOffset);
+  const start=pre.toString().length, text=range.toString();
+  if(!text.trim())return null;
+  return {start, end:start+text.length};
+}
+function handleSel(e){
+  if(cur!=='notes'||!markMode)return;
+  if(e&&e.target&&e.target.closest&&e.target.closest('#hlbar'))return;
+  const sel=window.getSelection();
+  if(!sel||sel.isCollapsed||!sel.rangeCount){hideBar();return}
+  let node=sel.getRangeAt(0).commonAncestorContainer;
+  if(node.nodeType===3)node=node.parentElement;
+  const container=node&&node.closest?node.closest('.kp-b'):null;
+  if(!container||!container.dataset.hlid){hideBar();return}
+  const off=getSelOffsets(container);
+  if(!off){hideBar();return}
+  curSel={hlid:container.dataset.hlid, start:off.start, end:off.end};
+  showBar(sel.getRangeAt(0).getBoundingClientRect());
+}
+function showBar(rect){
+  let bar=document.getElementById('hlbar');
+  if(!bar){
+    bar=document.createElement('div'); bar.id='hlbar';
+    bar.innerHTML=HLPAL.map(([c,col,lbl])=>`<button title="${lbl}底" style="background:${col}" onclick="hlAdd('${c}')"></button>`).join('')
+      +`<button class="er" title="清除標記" onclick="hlErase()">✕</button>`;
+    document.body.appendChild(bar);
+  }
+  bar.style.display='flex';
+  const bw=bar.offsetWidth||150, bh=bar.offsetHeight||34;
+  let left=rect.left+rect.width/2-bw/2, top=rect.top-bh-8;
+  left=Math.max(8,Math.min(left,innerWidth-bw-8));
+  if(top<8)top=rect.bottom+8;
+  bar.style.left=left+'px'; bar.style.top=top+'px';
+}
+function hideBar(){const b=document.getElementById('hlbar');if(b)b.style.display='none';curSel=null}
+function hlAdd(c){
+  if(!curSel)return;
+  const arr=S.hl[curSel.hlid]||[];
+  // 移除與本次選取重疊的舊標記，避免疊色
+  const kept=arr.filter(r=>r.end<=curSel.start||r.start>=curSel.end);
+  kept.push({start:curSel.start,end:curSel.end,c});
+  S.hl[curSel.hlid]=kept; save();
+  window.getSelection().removeAllRanges(); hideBar(); render();
+}
+function hlErase(){
+  if(!curSel)return;
+  const arr=S.hl[curSel.hlid]||[];
+  S.hl[curSel.hlid]=arr.filter(r=>r.end<=curSel.start||r.start>=curSel.end);
+  save(); window.getSelection().removeAllRanges(); hideBar(); render();
+}
+document.addEventListener('mouseup',e=>setTimeout(()=>handleSel(e),0));
+
+/* ============ 朗讀（Web Speech API） ============ */
+let tts={playing:false,paused:false,queue:[],idx:0,vi:-1,rate:1};
+let zhVoices=[];
+function loadVoices(){
+  zhVoices=speechSynthesis.getVoices().filter(v=>/^zh|cmn/i.test(v.lang));
+  // 只要使用者沒手動選過語音，就每次（含 Edge 線上語音稍後載入時）重選最佳男聲
+  if(!tts.userPicked&&zhVoices.length){
+    // 優先：Edge 自然男聲雲哲 (YunJhe) > 離線志威 (Zhiwei)；找不到再退回任一 zh-TW
+    let pref=zhVoices.findIndex(v=>/YunJhe/i.test(v.name));
+    if(pref<0)pref=zhVoices.findIndex(v=>/Zhiwei/i.test(v.name));
+    if(pref<0)pref=zhVoices.findIndex(v=>/zh-TW/i.test(v.lang));
+    tts.vi=pref>=0?pref:0;
+  }
+  updTTS();
+}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function ttsBoxHTML(){
+  if(!('speechSynthesis' in window))return '<span class="muted" style="font-size:.8rem">此瀏覽器不支援語音朗讀</span>';
+  const opts=zhVoices.map((v,i)=>`<option value="${i}" ${i===tts.vi?'selected':''}>${esc(v.name)}</option>`).join('');
+  const cur=tts.queue[tts.idx];
+  const st=tts.playing?`🔊 朗讀中 p.${cur?cur.p:''}（第 ${tts.idx+1}/${tts.queue.length} 段）${tts.paused?'　⏸ 已暫停':''}`:'點「朗讀本節」從目前小節開始唸';
+  return `<div class="row" style="gap:6px">
+      <button class="act sm" onclick="ttsStart()">🔊 朗讀本節</button>
+      <button class="ghost sm" onclick="ttsPause()" ${tts.playing?'':'disabled'}>${tts.paused?'▶ 繼續':'⏸ 暫停'}</button>
+      <button class="ghost sm" onclick="ttsStop()" ${tts.playing?'':'disabled'}>⏹ 停止</button></div>
+    <select onchange="tts.vi=+this.value;tts.userPicked=true">${opts||'<option>（找不到中文語音）</option>'}</select>
+    <div class="row" style="gap:6px"><span class="muted" style="font-size:.8rem">語速</span>
+      <input type="range" min="0.7" max="1.6" step="0.1" value="${tts.rate}" style="flex:1"
+        oninput="tts.rate=+this.value;document.getElementById('rateval').textContent=this.value">
+      <span id="rateval" class="muted" style="font-size:.8rem">${tts.rate}</span></div>
+    <div class="muted" style="font-size:.78rem;min-height:1.2em">${st}</div>`;
+}
+function updTTS(){const b=document.getElementById('ttsbox');if(b)b.innerHTML=ttsBoxHTML()}
+function ttsParas(){ // 目前小節（curPage 起）到下一小節前的段落
+  const u=BOOK.units.find(x=>x.id===readerUnit), secs=u.sections;
+  let si=0;for(let i=0;i<secs.length;i++)if(secs[i].page<=curPage)si=i;
+  const end=si+1<secs.length?secs[si+1].page-1:99999;
+  const items=[];
+  for(const pg of u.content)
+    if(pg.p>=curPage&&pg.p<=end)
+      for(const t of pg.paras){const s=ttsClean(t);if(s.length>1)items.push({p:pg.p,text:s})}
+  return items;
+}
+function ttsClean(s){
+  return s.replace(/^[¼h]+\s*/,'').replace(/^\((\d+)\)\s*/,'第$1點，')
+    .replace(/^(\d+\.\d+(\.\d+)?)\s*/,'$1。').replace(/[\t]/g,'').trim();
+}
+function ttsStart(){
+  speechSynthesis.cancel();
+  tts.queue=ttsParas();tts.idx=0;tts.playing=true;tts.paused=false;
+  if(!tts.queue.length){tts.playing=false;updTTS();return}
+  speakNext();updTTS();
+}
+function speakNext(){
+  if(!tts.playing||tts.idx>=tts.queue.length){ttsStop();return}
+  const u=new SpeechSynthesisUtterance(tts.queue[tts.idx].text);
+  if(zhVoices[tts.vi])u.voice=zhVoices[tts.vi];
+  u.lang='zh-TW';u.rate=tts.rate;
+  u.onend=()=>{if(tts.playing){tts.idx++;speakNext();updTTS()}};
+  u.onerror=()=>{if(tts.playing){tts.idx++;speakNext();updTTS()}};
+  speechSynthesis.speak(u);
+}
+function ttsPause(){
+  if(!tts.playing)return;
+  if(tts.paused){speechSynthesis.resume();tts.paused=false}
+  else{speechSynthesis.pause();tts.paused=true}
+  updTTS();
+}
+function ttsStop(){tts.playing=false;tts.paused=false;try{speechSynthesis.cancel()}catch(e){}updTTS()}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ============ 測驗引擎 ============ */
+function vQuiz(){
+  if(quizSession)return vQuizQ();
+  let html='<div class="card"><h2>選擇要測驗的單元</h2><div class="muted" style="margin-bottom:10px">一次一題，答錯自動加入複習排程（+1、+3、+7、+14 天）。</div></div><div class="grid">';
+  for(const u of BOOK.units){
+    const has=!!(QUIZ[u.id]&&QUIZ[u.id].length), st=ustate(u.id);
+    html+=`<div class="card"><h3>單元 ${u.id}　${u.title}</h3>
+      <div class="muted">${has?QUIZ[u.id].length+' 題':'題庫尚未生成 — 回到 Claude 對話說「生成單元'+u.id+'題庫」'}
+      ${st.best!==null?'　最佳成績 '+st.best+'%':''}</div>
+      ${has?`<button class="act sm" style="margin-top:8px" onclick="startQuiz(${u.id})">開始測驗</button>`:''}</div>`;
+  }
+  return html+'</div>';
+}
+function startQuiz(uid){
+  const qs=QUIZ[uid].map((q,i)=>({uid,qi:i,q}));
+  shuffle(qs);
+  quizSession={mode:'quiz',uid,items:qs,idx:0,correct:0,answered:false,picks:[],results:[]};
+  cur='quiz';render();
+}
+function startReview(){
+  const due=dueWrongs();
+  if(!due.length)return;
+  const items=due.map(w=>({uid:w.uid,qi:w.qi,q:QUIZ[w.uid][w.qi],w}));
+  shuffle(items);
+  quizSession={mode:'review',items,idx:0,correct:0,answered:false,picks:[],results:[]};
+  cur='quiz';render();
+}
+function vQuizQ(){
+  const ss=quizSession;
+  if(ss.idx>=ss.items.length)return vQuizDone();
+  const it=ss.items[ss.idx], q=it.q;
+  let html=`<div class="card">
+    <div class="row spread"><span class="badge ${ss.mode==='review'?'b-warn':'b-blue'}">${ss.mode==='review'?'🔁 錯題複習':'單元 '+ss.uid+' 測驗'}</span>
+    <span class="muted">第 ${ss.idx+1} / ${ss.items.length} 題</span></div>
+    <div class="bar"><div style="width:${Math.round(ss.idx/ss.items.length*100)}%"></div></div>
+    <div class="qmeta">${q.type==='multi'?'<span class="badge b-warn">複選題</span>　選出所有正確答案後按「送出」，需全部選對':'<span class="badge b-blue">單選題</span>'}</div>
+    <h3 style="margin:10px 0">${esc(q.q)}</h3>`;
+  const L='ABCDEF';
+  if(q.type==='multi'){
+    const ansArr=q.ans;
+    html+=q.opts.map((o,i)=>{
+      let cls='opt',click='';
+      if(ss.answered){
+        const isAns=ansArr.includes(i),picked=ss.picks.includes(i);
+        if(isAns)cls+=picked?' sel-ok':' reveal';
+        else if(picked)cls+=' sel-bad';
+      }else{
+        if(ss.picks.includes(i))cls+=' picked';
+        click=`onclick="togglePick(${i})"`;
+      }
+      return `<button class="${cls}" ${ss.answered?'disabled':''} ${click}>${L[i]}. ${esc(o)}</button>`;
+    }).join('');
+    if(!ss.answered)html+=`<div style="margin-top:10px"><button class="act" ${ss.picks.length?'':'disabled'} onclick="answerMulti()">送出答案</button></div>`;
+    else html+=`<div class="expl">正解：${ansArr.map(i=>L[i]).join('、')}（虛線框＝應選未選）<br>📖 ${q.ref}　${esc(q.expl||'')}</div>`;
+  }else{
+    html+=q.opts.map((o,i)=>{
+      let cls='opt',dis=ss.answered?'disabled':'';
+      if(ss.answered){if(i===q.ans)cls+=ss.pick===i?' sel-ok':' reveal';else if(i===ss.pick)cls+=' sel-bad'}
+      return `<button class="${cls}" ${dis} onclick="answerMC(${i})">${L[i]}. ${esc(o)}</button>`;
+    }).join('');
+    if(ss.answered)html+=`<div class="expl">📖 ${q.ref}　${esc(q.expl||'')}</div>`;
+  }
+  if(ss.answered)html+=`<div style="margin-top:12px"><button class="act" onclick="nextQ()">下一題 →</button></div>`;
+  return html+'</div>';
+}
+function answerMC(i){
+  const ss=quizSession;if(ss.answered)return;
+  ss.answered=true;ss.pick=i;
+  record(ss.items[ss.idx], i===ss.items[ss.idx].q.ans);
+  render();
+}
+function togglePick(i){
+  const ss=quizSession;if(ss.answered)return;
+  ss.picks=ss.picks.includes(i)?ss.picks.filter(x=>x!==i):[...ss.picks,i];
+  render();
+}
+function answerMulti(){
+  const ss=quizSession;if(ss.answered||!ss.picks.length)return;
+  ss.answered=true;
+  const ans=[...ss.items[ss.idx].q.ans].sort().join(),got=[...ss.picks].sort().join();
+  record(ss.items[ss.idx], ans===got);
+  render();
+}
+function record(it,ok){
+  const ss=quizSession;
+  if(ok)ss.correct++;
+  ss.results.push({uid:it.uid,qi:it.qi,ok});
+  const found=S.wrong.find(w=>w.uid===it.uid&&w.qi===it.qi);
+  if(!ok){
+    if(found){found.streak=0;found.due=addDays(today(),1)}
+    else S.wrong.push({uid:it.uid,qi:it.qi,due:addDays(today(),1),streak:0});
+  }else if(found){
+    found.streak=(found.streak||0)+1;
+    if(found.streak>=2)S.wrong=S.wrong.filter(w=>w!==found);   // 連續兩次答對 → 移除
+    else found.due=addDays(today(),[3,7,14][Math.min(found.streak,2)]);
+  }
+  save();
+}
+function nextQ(){const ss=quizSession;ss.idx++;ss.answered=false;ss.pick=null;ss.picks=[];render()}
+function vQuizDone(){
+  const ss=quizSession;
+  const pct=Math.round(ss.correct/ss.items.length*100);
+  if(ss.mode==='quiz'){
+    const st=ustate(ss.uid);
+    if(st.best===null||pct>st.best)st.best=pct;
+    S.history.push({date:today(),uid:ss.uid,score:ss.correct,total:ss.items.length});
+    save();
+  }
+  const wrongN=ss.items.length-ss.correct;
+  const msg=pct===100?'💯 全對！':pct>=80?'👍 不錯，錯題已排入複習':pct>=60?'📌 及格邊緣，建議重讀後再測':'⚠️ 建議回到閱讀頁重讀本單元';
+  const html=`<div class="card" style="text-align:center;padding:36px">
+    <div style="font-size:2.6rem;font-weight:800;color:${pct>=80?'var(--ok)':pct>=60?'var(--warn)':'var(--bad)'}">${pct}%</div>
+    <div style="margin:6px 0">${ss.correct} / ${ss.items.length} 題正確　${msg}</div>
+    ${wrongN?`<div class="muted">答錯的 ${wrongN} 題已加入複習排程（明天到期）</div>`:''}
+    <div class="row" style="justify-content:center;margin-top:16px">
+      ${ss.mode==='quiz'?`<button class="ghost" onclick="startQuiz(${ss.uid})">再測一次</button>`:''}
+      <button class="act" onclick="quizSession=null;nav('dash')">回儀表板</button>
+    </div></div>`;
+  quizSession=null;
+  return html;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+
+/* ============ 複習 ============ */
+function vReview(){
+  const due=dueWrongs(), future=S.wrong.filter(w=>w.due>today()).sort((a,b)=>a.due<b.due?-1:1);
+  let html=`<div class="card"><h2>🔁 錯題複習（間隔重複）</h2>
+    <div class="muted" style="margin-bottom:10px">答錯 → 隔天再考；答對 → 間隔拉長（3、7、14 天）；連續兩次答對 → 畢業移除。</div>
+    ${due.length?`<button class="act" onclick="startReview()">開始複習 ${due.length} 題到期錯題</button>`:'<span class="badge b-ok">今天沒有到期錯題 🎉</span>'}</div>`;
+  if(S.wrong.length){
+    html+=`<div class="card"><h3>錯題清單（${S.wrong.length} 題）</h3><table>
+      <tr><th>到期日</th><th>單元</th><th>題目</th><th>連對</th></tr>`;
+    for(const w of [...due,...future]){
+      const q=QUIZ[w.uid]&&QUIZ[w.uid][w.qi];if(!q)continue;
+      html+=`<tr><td class="${w.due<=today()?'due':''}">${w.due}</td><td>單元${w.uid}</td>
+        <td>${esc(q.q.slice(0,42))}…</td><td>${w.streak||0}/2</td></tr>`;
+    }
+    html+='</table></div>';
+  }
+  return html;
+}
+
+/* ============ 紀錄 ============ */
+function vStats(){
+  let html=`<div class="card"><div class="row spread"><h2>📊 測驗紀錄</h2>
+    <div class="row"><button class="ghost sm" onclick="expData()">匯出進度</button>
+    <button class="ghost sm" onclick="document.getElementById('imp').click()">匯入進度</button>
+    <input type="file" id="imp" accept=".json" style="display:none" onchange="impData(this)">
+    <button class="ghost sm" style="color:var(--bad);border-color:var(--bad)" onclick="clearWrong()">清除錯題</button>
+    <button class="ghost sm" style="color:var(--bad);border-color:var(--bad)" onclick="clearAll()">清除全部紀錄</button></div></div>`;
+  if(!S.history.length)html+='<div class="muted">尚無測驗紀錄。</div>';
+  else{
+    html+='<table><tr><th>日期</th><th>單元</th><th>成績</th></tr>';
+    for(const h of [...S.history].reverse())
+      html+=`<tr><td>${h.date}</td><td>單元 ${h.uid}</td><td>${h.score}/${h.total}（${Math.round(h.score/h.total*100)}%）</td></tr>`;
+    html+='</table>';
+  }
+  return html+`</div><div class="card"><h3>⚠️ 資料說明</h3><div class="muted">進度存在這台電腦的瀏覽器（localStorage）。換電腦或清瀏覽器資料前，請先「匯出進度」備份。匯出的 JSON 也可以貼給 Claude 同步到 study/progress.md。</div></div>`;
+}
+function clearWrong(){
+  if(!S.wrong.length){alert('目前沒有錯題紀錄。');return;}
+  if(!confirm('確定清除「錯題清單」共 '+S.wrong.length+' 題？（測驗成績與單元進度保留）'))return;
+  S.wrong=[];save();render();
+}
+function clearAll(){
+  if(!confirm('確定清除「全部紀錄」？包含測驗成績、錯題清單、各單元已讀/最佳成績，且無法復原。建議先「匯出進度」備份。'))return;
+  S={units:{},wrong:[],history:[],log:[]};save();render();
+}
+function expData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='iics-progress-'+today()+'.json';a.click();
+}
+function impData(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{S=JSON.parse(r.result);save();render();alert('匯入完成')}catch(e){alert('檔案格式錯誤')}};
+  r.readAsText(f);
+}
+render();
+</script>
+</body>
+</html>
