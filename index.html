@@ -13,7 +13,9 @@ const $=id=>document.getElementById(id),key='toeic_lessons_v1';let tracks=[];try
 function status(message,error=false){$('driveInfo').textContent=message;$('driveInfo').className='status '+(error?'err':'ok')}
 function folderFrom(s){s=s.trim();let m=s.match(/\/folders\/([a-zA-Z0-9_-]+)/);return m?m[1]:/^[a-zA-Z0-9_-]{10,}$/.test(s)?s:null}
 function saveConfig(){cfg={clientId:$('clientId').value.trim(),folderId:$('folderId').value.trim()};localStorage.setItem(configKey,JSON.stringify(cfg))}
-$('clientId').value=cfg.clientId||'';$('folderId').value=cfg.folderId||'';
+const DEFAULT_CLIENT_ID='747657718638-ppbqcu783ccpvln2jnau2ltkrrjpkmhm.apps.googleusercontent.com';
+const DEFAULT_FOLDER_ID='1T7ukANBenmR298EYb2gFcpv1SAWtrMev';
+$('clientId').value=cfg.clientId||DEFAULT_CLIENT_ID;$('folderId').value=cfg.folderId||DEFAULT_FOLDER_ID;
 $('clientId').onchange=saveConfig;$('folderId').onchange=saveConfig;
 function googleReady(){if(location.protocol==='file:')throw Error('請透過 GitHub Pages HTTPS 網址，或使用 http://localhost:8765 開啟網站；不能直接以 file:// 開啟 HTML 使用 Google 登入。');if(!window.google?.accounts?.oauth2)throw Error('Google 登入元件尚未載入，請確認網路可連線至 accounts.google.com。');let cid=$('clientId').value.trim();if(!/^[^\s]+\.apps\.googleusercontent\.com$/.test(cid))throw Error('請輸入有效的 OAuth 用戶端 ID');return cid}
 $('connect').onclick=()=>{try{let cid=googleReady();saveConfig();tokenClient=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/drive.readonly',callback:async response=>{if(response.error||!response.access_token){status('登入授權失敗：'+(response.error||'未取得存取權杖'),true);return}accessToken=response.access_token;status('授權成功，正在讀取資料夾…');await syncDrive()}});tokenClient.requestAccessToken({prompt:'consent'})}catch(e){status(e.message,true)}};
