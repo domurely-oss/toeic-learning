@@ -1,14 +1,232 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TOEIC 聽力學習站</title><style>:root{font-family:system-ui,'Microsoft JhengHei',sans-serif;color:#17243b;background:#f3f6fb}*{box-sizing:border-box}body{margin:0}header{background:#152c54;color:white;padding:24px max(20px,calc((100% - 1050px)/2))}h1{margin:0;font-size:26px}header p{margin:7px 0 0;color:#c9d8ef}main{max-width:1050px;margin:24px auto;padding:0 16px;display:grid;grid-template-columns:320px 1fr;gap:18px}.panel{background:white;border:1px solid #e2e8f2;border-radius:15px;padding:20px;box-shadow:0 5px 18px #19365a0a}h2{font-size:18px;margin:0 0 15px}label{font-size:13px;font-weight:650;display:block;margin:13px 0 6px}input,select,textarea{width:100%;padding:11px;border:1px solid #ccd5e3;border-radius:9px;font:inherit}textarea{min-height:145px;resize:vertical}button{background:#235cba;color:white;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font:inherit}button.secondary{background:#eaf0fa;color:#24416e}button.danger{background:#fbe8e8;color:#a12828}button:disabled{opacity:.5}button:hover{filter:brightness(.95)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.muted{color:#66758c;font-size:13px;line-height:1.6}.track{padding:12px;border:1px solid #e0e7f2;border-radius:10px;margin:8px 0;cursor:pointer}.track.active{border-color:#3573d4;background:#edf4ff}.track small{color:#64748b}.track .name{font-weight:650;word-break:break-word}.player{background:#edf4ff;border-radius:13px;padding:18px;margin-bottom:16px}.time{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:#546780;font-size:12px}input[type=range]{padding:0;accent-color:#235cba}.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}.actions button{flex:none}.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.meta select{width:auto}.pill{display:inline-block;background:#dce9fc;border-radius:99px;padding:4px 10px;font-size:12px}.preview{width:100%;height:130px;border:0;border-radius:10px;background:white}.notice{background:#fff8e7;padding:12px;border-radius:9px;font-size:13px;color:#76531d;line-height:1.6}.stats{display:flex;gap:12px;margin-bottom:16px}.stats div{flex:1;background:#f4f7fc;padding:12px;border-radius:10px}.stats strong{display:block;font-size:21px}.hidden{display:none!important}@media(max-width:750px){main{grid-template-columns:1fr}header{padding:22px}.row{align-items:stretch}} .config{background:#f7faff;border:1px solid #dbe6f7;border-radius:12px;padding:14px;margin-bottom:15px}.config summary{font-weight:700;cursor:pointer}.tag{display:inline-block;background:#e7eefb;border-radius:20px;padding:3px 8px;font-size:12px;color:#345989}.status{font-size:13px;margin:10px 0;line-height:1.6}.ok{color:#167048}.err{color:#ad3030}.toolbar{display:flex;gap:8px;margin:10px 0}.toolbar input{flex:1;min-width:0}.toolbar select{width:130px}.subtitle{font-size:12px;color:#64748b}.track{position:relative}.track .name{padding-right:0}.config button{margin-top:10px} .spin{opacity:.7;pointer-events:none} #driveInfo{white-space:pre-wrap} .smallbtn{font-size:12px;padding:8px} #playerSection{scroll-margin-top:16px} .track:focus-visible{outline:3px solid #3573d4} </style></head><body><header><h1>🎧 TOEIC 多益聽力學習站</h1><p>Part 1–4 分類練習 · 變速播放 · A–B 重複 · Google Drive 聽力檔</p></header><main><aside class="panel"><h2>Google Drive 雲端教材 <span class="tag">API 自動同步</span></h2>
-<div class="config" aria-label="Google Drive 雲端連線">
-<input type="hidden" id="clientId"><input type="hidden" id="folderId">
-<div class="row"><button id="connect">Google 登入並同步教材</button><button id="sync" class="secondary">重新同步</button></div>
-<div class="row" style="margin-top:8px"><button id="disconnect" class="secondary smallbtn">登出</button><button id="clearCloud" class="secondary smallbtn">清空雲端清單</button></div>
-<div id="driveInfo" class="status" role="status">尚未連接 Google Drive，請先登入。</div>
-<p class="muted">教材資料夾已預先設定，登入 Google 後即可自動載入 MP3。連線設定不顯示於操作畫面。</p>
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>TOEIC 聽力學習站</title><style>:root{font-family:system-ui,'Microsoft JhengHei',sans-serif;color:#17243b;background:#f3f6fb}*{box-sizing:border-box}body{margin:0}header{background:#152c54;color:white;padding:24px max(20px,calc((100% - 1050px)/2))}h1{margin:0;font-size:26px}header p{margin:7px 0 0;color:#c9d8ef}main{max-width:1050px;margin:24px auto;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}.panel{background:white;border:1px solid #e2e8f2;border-radius:15px;padding:20px;box-shadow:0 5px 18px #19365a0a}h2{font-size:18px;margin:0 0 15px}label{font-size:13px;font-weight:650;display:block;margin:13px 0 6px}input,select,textarea{width:100%;padding:11px;border:1px solid #ccd5e3;border-radius:9px;font:inherit}textarea{min-height:145px;resize:vertical}button{background:#235cba;color:white;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font:inherit}button.secondary{background:#eaf0fa;color:#24416e}button.danger{background:#fbe8e8;color:#a12828}button:disabled{opacity:.5}button:hover{filter:brightness(.95)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.muted{color:#66758c;font-size:13px;line-height:1.6}.track{padding:12px;border:1px solid #e0e7f2;border-radius:10px;margin:8px 0;cursor:pointer}.track.active{border-color:#3573d4;background:#edf4ff}.track small{color:#64748b}.track .name{font-weight:650;word-break:break-word}.player{background:#edf4ff;border-radius:13px;padding:18px;margin-bottom:16px}.time{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:#546780;font-size:12px}input[type=range]{padding:0;accent-color:#235cba}.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}.actions button{flex:none}.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.meta select{width:auto}.pill{display:inline-block;background:#dce9fc;border-radius:99px;padding:4px 10px;font-size:12px}.preview{width:100%;height:130px;border:0;border-radius:10px;background:white}.notice{background:#fff8e7;padding:12px;border-radius:9px;font-size:13px;color:#76531d;line-height:1.6}.stats{display:flex;gap:12px;margin-bottom:16px}.stats div{flex:1;background:#f4f7fc;padding:12px;border-radius:10px}.stats strong{display:block;font-size:21px}.hidden{display:none!important}@media(max-width:750px){main{grid-template-columns:1fr}header{padding:22px}.row{align-items:stretch}} .config{background:#f7faff;border:1px solid #dbe6f7;border-radius:12px;padding:14px;margin-bottom:15px}.config summary{font-weight:700;cursor:pointer}.tag{display:inline-block;background:#e7eefb;border-radius:20px;padding:3px 8px;font-size:12px;color:#345989}.status{font-size:13px;margin:10px 0;line-height:1.6}.ok{color:#167048}.err{color:#ad3030}.toolbar{display:flex;gap:8px;margin:10px 0}.toolbar input{flex:1;min-width:0}.toolbar select{width:130px}.subtitle{font-size:12px;color:#64748b}.track{position:relative}.track .name{padding-right:0}.config button{margin-top:10px} .spin{opacity:.7;pointer-events:none} #driveInfo{white-space:pre-wrap} .smallbtn{font-size:12px;padding:8px} #playerSection{scroll-margin-top:16px} .track:focus-visible{outline:3px solid #3573d4} .autonextbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:12px} .autonextbar button[aria-pressed="true"]{background:#17694b;color:white} .autonextbar .muted{flex:1;min-width:200px} 
+/* Separate single-page views, preserving playback state and Google OAuth session. */
+.view-nav{max-width:1050px;margin:20px auto 0;padding:0 16px;display:flex;gap:10px;flex-wrap:wrap}
+.view-nav .view-tab{background:#e5edfb;color:#264773;border:1px solid #bed1ef;font-weight:700;flex:1;min-width:170px}
+.view-nav .view-tab.active{background:#235cba;color:#fff;border-color:#235cba}
+.view-nav .view-tab:focus-visible{outline:3px solid #e0ae37;outline-offset:2px}
+.view-lead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;font-weight:700;color:#25466f}
+.view-lead button{flex:none}
+#materialsSection{min-width:0}
+@media(max-width:550px){.view-lead{flex-wrap:wrap}.view-lead button{width:100%}}
+
+/* TOEIC visual refresh · presentation-only overrides. Existing IDs and JavaScript remain intact. */
+:root{color-scheme:light;--ink:#152b40;--muted:#5f7284;--brand:#0d776e;--brand-deep:#07594f;--blue:#1c496e;--line:#dae5e9;--soft:#eef7f5;--shadow:0 12px 38px rgba(20,53,72,.065);font-family:Inter,"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink);background:#f4f8f9}
+body{background:radial-gradient(ellipse 85% 250px at 50% 0%,#e5f3f0 0%,transparent 95%),#f4f8f9;min-height:100vh;line-height:1.55}
+header{background:linear-gradient(115deg,#123b56 0%,#15546b 49%,#096f6b 100%);padding:34px max(22px,calc((100% - 1120px)/2)) 36px;position:relative;overflow:hidden}
+header:after{content:"";position:absolute;width:295px;height:295px;right:-80px;top:-195px;border:55px solid rgba(255,255,255,.065);border-radius:50%;pointer-events:none}
+header h1{font-size:clamp(24px,3vw,32px);font-weight:800;letter-spacing:.018em;line-height:1.35;position:relative;z-index:1}
+header p{color:#d0e9e8;font-size:14px;margin-top:8px;position:relative;z-index:1;line-height:1.7}
+.view-nav{max-width:1120px;margin:-20px auto 0;padding:0 20px;position:relative;z-index:2;gap:12px}
+.view-nav .view-tab{min-height:54px;background:#fff;border:1px solid #d8e7e6;color:#496679;border-radius:14px;box-shadow:0 4px 14px rgba(14,58,73,.08);transition:background .18s,transform .18s,border-color .18s;min-width:150px;font-size:15px}
+.view-nav .view-tab.active{background:var(--brand);border-color:var(--brand);color:white;box-shadow:0 7px 18px rgba(13,119,110,.23)}
+.view-nav .view-tab:hover{transform:translateY(-2px)}
+main{max-width:1120px;margin:22px auto 48px;padding:0 20px;gap:20px}
+.panel{border:1px solid #e1eaed;border-radius:20px;background:#fff;padding:clamp(17px,2.7vw,28px);box-shadow:var(--shadow);min-width:0}
+h2{font-size:19px;line-height:1.4;color:#1b3e52;font-weight:800;margin:0 0 16px;letter-spacing:.008em}
+.view-lead{margin-bottom:19px;border-bottom:1px solid #e8eff1;padding-bottom:15px;color:#225269;font-size:16px}
+.view-lead span{display:flex;align-items:center;gap:9px}
+.view-lead span:before{content:"";height:19px;width:5px;border-radius:4px;background:#24a99b;display:inline-block}
+button{background:var(--brand);border:1px solid transparent;color:white;border-radius:11px;padding:10px 15px;min-height:42px;font-weight:700;line-height:1.35;transition:background .16s,transform .16s,box-shadow .16s;box-shadow:none}
+button:hover:not(:disabled){filter:none;background:var(--brand-deep);transform:translateY(-1px);box-shadow:0 4px 10px rgba(7,89,79,.14)}
+button.secondary{background:#edf5f5;color:#1c6065;border-color:#dceaea}
+button.secondary:hover:not(:disabled){background:#dcefed;color:#084c4e}
+button.danger{background:#fff0ef;color:#a44442;border-color:#f5dbd7}
+button.danger:hover:not(:disabled){background:#fce4e0;color:#972e2e}
+button:disabled{cursor:not-allowed;opacity:.48;box-shadow:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.track:focus-visible{outline:3px solid #6ac6bc;outline-offset:2px}
+input,select,textarea{border:1px solid #d4e0e5;border-radius:11px;background:#fff;color:var(--ink);padding:12px 13px;min-width:0;transition:border-color .15s,box-shadow .15s;font-size:14px}
+input:focus,select:focus,textarea:focus{border-color:#35a699;box-shadow:0 0 0 3px #54c2b420;outline:0}
+input::placeholder,textarea::placeholder{color:#93a2af}
+input[type=range]{accent-color:var(--brand);box-shadow:none}
+label{color:#405b6c;font-size:13px;font-weight:750;margin-top:15px}
+.muted{color:var(--muted);font-size:13px}
+.stats{gap:12px;margin-bottom:23px}
+.stats div{padding:14px 18px;background:linear-gradient(125deg,#eff9f6,#f5fafc);border:1px solid #dfefeb;border-radius:14px}
+.stats strong{font-size:27px;font-weight:850;color:#076c64;line-height:1.2;margin-top:5px}
+#now{font-size:clamp(19px,2.3vw,24px);margin-bottom:17px;color:#183a51;overflow-wrap:anywhere}
+.player{padding:clamp(17px,3.2vw,30px);background:linear-gradient(145deg,#eef8f7,#e9f1f8);border:1px solid #d8e9e7;border-radius:18px;margin-bottom:18px}
+#seek{display:block;width:100%;height:8px;margin:10px 0 9px;cursor:pointer}
+.time{font-size:13px;color:#587284;font-weight:600}
+.actions{margin:24px 0 21px;gap:9px}
+.actions button{min-height:46px;padding:11px 15px}
+#play{background:#086c64;min-width:110px;box-shadow:0 6px 15px #086c6426;font-size:16px}
+.meta{gap:9px}.meta label{color:#48697d;font-size:13px}.meta select{min-height:40px}
+.pill,.tag{background:#d4ece8;color:#0a655f;border-radius:99px;padding:6px 11px;font-weight:700}
+.autonextbar{background:#f7fafb;border:1px solid #e4edef;padding:14px;border-radius:14px;gap:10px}
+.autonextbar button[aria-pressed="true"]{background:#0d776e;color:#fff;border-color:#0d776e}
+.autonextbar .muted{font-size:12px}
+.notice{border:1px solid #f3e3bd;background:#fffaf0;color:#815f27;border-radius:12px}
+.config{background:linear-gradient(155deg,#f0f9f7,#f6fafc);border:1px solid #dbece8;border-radius:16px;padding:18px}
+.status{background:#fff;border:1px solid #e2ebeb;border-radius:10px;padding:12px 13px;color:#4d6975;overflow-wrap:anywhere}
+.status.ok{border-color:#c5e8d9;background:#f0fbf5;color:#146647}
+.status.err{border-color:#f2d1d1;background:#fff4f3;color:#a63535}
+.toolbar{gap:10px;margin:14px 0}.toolbar input{flex:1}
+#filter{margin:0 0 14px}
+.track{margin:10px 0;padding:15px 16px;border:1px solid #dee9ec;background:#fff;border-radius:13px;transition:transform .16s,border-color .16s,box-shadow .16s,background .16s}
+.track:hover{transform:translateY(-2px);border-color:#86c7be;box-shadow:0 7px 15px rgba(12,79,79,.075)}
+.track.active{border-color:#19a394;background:#f0faf7;box-shadow:inset 4px 0 #17a998}
+.track .name{font-size:15px;color:#1e4659;font-weight:750}
+.track small{color:#6a8190}
+#list:empty:before{content:"教材清單目前沒有項目，請先同步 Google Drive 或加入音檔。";display:block;text-align:center;padding:30px 14px;color:#758b95;background:#f7fafb;border:1px dashed #dce7eb;border-radius:14px}
+textarea{line-height:1.7;min-height:155px}
+#notes{min-height:115px}
+#transcriptSection .row{gap:10px}
+#transcriptStatus,#asrStatus{padding:10px 12px;border-left:3px solid #54b9b0;border-radius:0 8px 8px 0;background:#f6faf9}
+#drivePlayer{margin:16px 0}#drivePlayer a{color:#0a766e;text-underline-offset:3px}
+@media(max-width:750px){header{padding:28px 19px 44px}.view-nav{padding:0 14px;margin-top:-21px;gap:8px}.view-nav .view-tab{min-width:0;flex:1;padding:10px 8px;font-size:13px;min-height:50px}main{padding:0 13px;margin-top:17px;gap:14px}.panel{border-radius:16px;padding:18px}.player{padding:16px}.actions{gap:8px}.actions button{flex:1 1 calc(33.33% - 8px);padding:10px 7px;font-size:13px}.actions #play{order:-1;flex:1 1 100%;font-size:16px}.meta{align-items:stretch}.meta select{max-width:140px}.autonextbar button{flex:1 1 180px}.stats strong{font-size:24px}.view-lead{flex-wrap:wrap}.view-lead button{width:auto}.row{gap:9px}}
+@media(max-width:450px){header h1{font-size:24px}header p{font-size:12px}.view-nav .view-tab{font-size:12px}.view-lead button{width:100%}.toolbar{flex-wrap:wrap}.toolbar input{flex:1 1 100%}.toolbar button{flex:1}#transcriptSection .row>button{flex:1 1 100%}.meta label{flex:0 0 auto}.meta button{flex:1 1 90px}.config .row button{flex:1 1 115px}.stats{gap:8px}.stats div{padding:12px}.panel{padding:15px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Two-column listening workspace: permanently visible sidebar + player/transcript. */
+.view-nav{display:none!important}
+main{max-width:1500px;width:100%;display:grid;grid-template-columns:minmax(285px,330px) minmax(0,1fr);grid-template-rows:auto auto;gap:18px 22px;align-items:start;margin:22px auto 48px;padding:0 22px}
+#materialsSection{grid-column:1;grid-row:1 / span 2;position:sticky;top:14px;max-height:calc(100vh - 28px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:20px;min-height:360px}
+#playerSection{grid-column:2;grid-row:1}
+#transcriptSection{grid-column:2;grid-row:2}
+#materialsSection .view-lead{margin-bottom:15px;padding-bottom:12px}
+#backToPlayer,#chooseMaterial{display:none}
+.sidebar-list-head h2{margin:0 0 4px;font-size:18px}
+.sidebar-list-head .muted{margin:0 0 12px}
+#materialsSection .toolbar{display:flex;flex-wrap:wrap}
+#materialsSection .toolbar input{flex:1 1 120px}
+#materialsSection .toolbar button{flex:0 0 auto}
+#materialsSection #filter{width:100%}
+#list{min-height:90px}
+#list .track{padding:12px 13px;margin:8px 0}
+#list .track .name{font-size:14px}
+.sidebar-settings{border-top:1px solid #e2eaea;margin-top:20px;padding-top:15px}
+.sidebar-settings summary{cursor:pointer;color:#1b5e66;font-weight:750;padding:11px 8px;background:#eff8f7;border-radius:10px;list-style-position:inside}
+.sidebar-settings summary:hover{background:#e2f3f0}
+.sidebar-settings-body{padding-top:15px;min-width:0}
+.sidebar-settings-body .row{flex-wrap:wrap}
+.sidebar-settings-body .row>button{flex:1 1 115px}
+#playerSection,#transcriptSection{min-width:0}
+@media(max-width:850px){
+ main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;padding:0 13px;gap:14px}
+ #materialsSection{grid-column:1;grid-row:1;position:static;max-height:none;overflow:visible;min-height:0}
+ #playerSection{grid-column:1;grid-row:2}
+ #transcriptSection{grid-column:1;grid-row:3}
+ #list{max-height:330px;overflow:auto;scrollbar-width:thin}
+ #backToPlayer,#chooseMaterial{display:inline-flex}
+}
+
+/* Compact Google Drive login/sync panel at the upper-right of the header. */
+header{overflow:visible;min-height:130px;padding-right:max(330px,calc((100% - 1120px)/2))}
+header .cloud-mini{position:absolute;right:max(20px,calc((100% - 1450px)/2));top:20px;width:250px;z-index:30;color:#18384c;font-size:13px}
+.cloud-mini>summary{display:flex;align-items:center;gap:9px;justify-content:space-between;list-style:none;cursor:pointer;background:rgba(255,255,255,.97);border:1px solid rgba(255,255,255,.7);border-radius:12px;box-shadow:0 5px 16px rgba(0,0,0,.12);padding:9px 12px;font-weight:700;line-height:1.35;min-height:40px}
+.cloud-mini>summary::-webkit-details-marker{display:none}
+.cloud-mini>summary:focus-visible{outline:3px solid #ffcf6c;outline-offset:3px}
+.cloud-mini[open]>summary{border-radius:12px 12px 8px 8px}
+.cloud-state{font-size:11px;font-weight:700;color:#7e4820;background:#fff0dd;border-radius:20px;padding:4px 8px;white-space:nowrap}
+.cloud-state.connected{color:#096347;background:#dff8ec}
+.cloud-mini-panel{background:#fff;color:#18384c;border:1px solid #dce8e9;border-radius:12px;box-shadow:0 18px 48px rgba(14,43,58,.22);margin-top:6px;padding:13px;max-height:min(75vh,520px);overflow-y:auto}
+.cloud-mini-heading{font-weight:800;margin:0 0 9px;font-size:14px}
+.cloud-mini .config{padding:0;margin:0;background:transparent;border:0;box-shadow:none}
+.cloud-mini .config .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 7px}
+.cloud-mini .config .row button{width:100%;min-width:0;margin:0!important;white-space:normal;padding:8px 6px;font-size:12px;line-height:1.3}
+.cloud-mini #connect{grid-column:1/-1}
+.cloud-mini #driveInfo{font-size:12px;line-height:1.45;word-break:break-word;margin:7px 0}
+.cloud-mini .muted{font-size:11px;line-height:1.5;margin-top:8px}
+@media(max-width:750px){header{padding:16px 18px 22px;min-height:0}header h1{font-size:23px;padding-right:0}header p{font-size:12px;margin-top:5px}header .cloud-mini{position:relative;right:auto;top:auto;width:100%;max-width:330px;margin:13px 0 0 auto}.cloud-mini-panel{position:absolute;right:0;top:100%;width:min(330px,calc(100vw - 36px));z-index:100}}
+
+.material-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.material-filters select{min-width:0;margin:0} .category-manager{background:#f4faf9;border:1px solid #d7e9e5;border-radius:12px;padding:11px;margin:0 0 12px}.category-manager summary{font-weight:700;cursor:pointer;color:#186b64}.category-controls{display:flex;gap:7px;margin:12px 0}.category-controls input{min-width:0;flex:1}.category-controls button{flex:none}.category-manager-list{display:grid;gap:7px}.category-item{display:flex;gap:8px;align-items:center;background:white;border:1px solid #e0eae8;padding:8px;border-radius:9px}.category-item span{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}.category-item button{font-size:12px;padding:6px 8px;flex:none}.track-head{display:flex;gap:8px;align-items:center;justify-content:space-between}.track-head .name{min-width:0;flex:1}.assign-category{font-size:12px!important;flex:none;padding:6px 8px!important;background:#e4f4f0!important;color:#17675d!important}.track-category{display:inline-block;font-size:11px;font-weight:700;color:#13776d;background:#e8f5f2;border-radius:20px;padding:3px 8px;margin:5px 0 3px}.category-manager .muted{margin:9px 0 0}@media(max-width:420px){.material-filters{grid-template-columns:1fr}.category-controls{flex-wrap:wrap}}
+.category-cloud-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 6px}.category-cloud-actions button{font-size:12px;flex:1;min-width:130px;padding:9px 7px}#categoryCloudStatus{overflow-wrap:anywhere}
+
+/* 按需啟用批次選取：預設不顯示勾選框 */
+.batch-mode-toggle{margin:7px 0 9px;display:flex;justify-content:flex-end}
+.batch-mode-toggle button{font-size:13px;padding:8px 12px}
+body:not(.batch-mode) .batch-toolbar,body:not(.batch-mode) .track-check{display:none!important}
+/* 批次選取及分類工具 */
+.batch-toolbar{background:#f0f8f6;border:1px solid #c9e4dd;border-radius:12px;padding:10px;margin:9px 0 12px;display:grid;gap:9px}
+.batch-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.batch-top label{display:inline-flex;align-items:center;gap:6px;margin:0;font-size:13px;cursor:pointer}.batch-top input[type=checkbox],.track-check input{width:18px;height:18px;accent-color:#087e74;cursor:pointer;margin:0;padding:0;flex:none}.batch-top .batch-count{margin-left:auto;font-size:12px;font-weight:700;color:#17675d}
+.batch-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.batch-actions select{flex:1;min-width:130px;width:auto;padding:8px;font-size:13px}.batch-actions button{flex:none;font-size:12px;padding:9px 10px}.batch-hint{font-size:12px;color:#57756e;line-height:1.5}
+.track-head .track-check{display:flex;align-items:center;justify-content:center;flex:none;width:25px;height:30px;cursor:pointer}.track.batch-selected{border-color:#3b9889;background:#f0faf7}
+@media(max-width:420px){.batch-actions button{flex:1}}
+</style></head><body><header><h1>🎧 TOEIC 多益聽力學習站</h1><p>Part 1–4 分類練習 · 變速播放 · A–B 重複 · Google Drive 聽力檔</p><details class="cloud-mini" id="cloudMini"><summary aria-label="Google Drive 登入與同步">☁ Google Drive <span id="cloudState" class="cloud-state">未連線</span></summary><div class="cloud-mini-panel"><div class="cloud-mini-heading">雲端登入與同步</div><div aria-label="Google Drive 雲端連線" class="config">
+<input id="clientId" type="hidden"/><input id="folderId" type="hidden"/>
+<div class="row"><button id="connect">Google 連線／快速續用</button><button class="secondary" id="sync">重新同步</button><button class="secondary smallbtn" id="reauthorize" type="button">重新授權</button></div>
+<div class="row" style="margin-top:8px"><button class="secondary smallbtn" id="disconnect">登出</button><button class="secondary smallbtn" id="clearCloud">清空雲端清單</button></div>
+<div class="status" id="driveInfo" role="status">尚未連接 Google Drive，請先登入。</div>
+<p class="muted">教材清單及筆記會保留在此瀏覽器。已授權過的 Google 帳號會優先嘗試免重複同意；若 Google 要求確認，仍需手動授權。短期授權只保留在目前分頁工作階段，不儲存長期登入憑證。</p>
+</div></div></details></header><nav aria-label="主要功能切換" class="view-nav"><button aria-current="page" class="view-tab active" id="goPlayer" type="button">🎧 聽力播放</button><button class="view-tab" id="goMaterials" type="button">📚 我的教材清單</button><button class="view-tab" id="goGuest" type="button" aria-controls="guestSection">🌏 免登入使用</button></nav><main><section class="panel" id="playerSection"><div class="view-lead"><span>聽力播放與逐字稿</span><button class="secondary" id="chooseMaterial" type="button">📚 選擇教材</button></div><div class="stats"><div><span class="muted">教材數量</span><strong id="count">0</strong></div><div><span class="muted">已完成</span><strong id="done">0</strong></div></div><h2 id="now">請先選擇聽力教材</h2><div class="player" id="localPlayer"><audio id="audio" preload="metadata"></audio><input id="seek" max="1000" min="0" type="range" value="0"/><div class="time"><span id="current">00:00</span><span id="duration">00:00</span></div><div class="actions"><button class="secondary" id="prev">上一首</button><button class="secondary" id="back">−5 秒</button><button id="play">▶ 播放</button><button class="secondary" id="forward">+5 秒</button><button class="secondary" id="next">下一首</button></div><div class="meta"><label style="margin:0">速度</label><select id="speed"><option value="0.75">0.75×</option><option selected="" value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select><button class="secondary" id="markA">設 A 點</button><button class="secondary" id="markB">設 B 點</button><button class="secondary" id="clearAB">清除區間</button><span class="pill" id="ab">未設定 A–B</span></div></div><div class="hidden" id="drivePlayer"><div class="notice">Google Drive 使用官方預覽播放器；如無法播放，請確認共用權限，或改用本機檔案模式。</div><iframe allow="autoplay" class="preview" id="frame" title="Google Drive 聽力預覽"></iframe><p><a id="openDrive" rel="noopener noreferrer" target="_blank">在 Google Drive 開啟檔案</a></p></div><div class="autonextbar"><button aria-pressed="false" class="secondary" id="repeatOne" type="button">🔂 單曲重複：關閉</button><button aria-pressed="false" class="secondary" id="autoNext" type="button">▶ 自動播放下一首：關閉</button><span class="muted" id="autoNextHelp">開啟後，目前音檔播放完畢便接續播放清單的下一首；最後一首會停止。</span></div></section><section class="panel" id="transcriptSection"><div class="row" style="margin:16px 0"><button id="complete">✓ 標記完成</button><button class="danger" id="remove">刪除此教材</button></div><h2>中英文逐字稿及學習筆記</h2><p class="muted" id="transcriptStatus" role="status">請先選擇教材。若雲端資料夾中有同名 TXT、SRT、VTT，將自動讀取。</p><div class="row" style="margin:8px 0"><button class="secondary" id="transcribeAudio" type="button">🎙 從音檔產生英文逐字稿</button><button class="secondary" id="prepareWhisper" type="button">⬇ 測試／下載辨識模型</button><button class="secondary" id="translateEnglish" type="button">🌐 重新翻譯成中文</button><button id="saveTranscriptDrive" type="button">☁ 儲存逐字稿至 Google Drive</button><button class="secondary" id="reloadTranscript">↻ 重新載入雲端逐字稿</button><label style="margin:0;flex:2">匯入逐字稿檔<input accept=".txt,.srt,.vtt,text/plain,text/vtt" id="transcriptFile" style="margin-top:4px" type="file"/></label></div><label class="autoupload-option" style="display:flex;align-items:center;gap:9px;font-size:14px;margin:12px 0"><input id="autoTranslateChinese" type="checkbox" style="width:auto;accent-color:#087e74"> 英文辨識完成後自動翻譯成繁體中文（預設開啟）</label><p class="muted" id="translateStatus" role="status">可在英文辨識完成後自動翻譯，或修改英文內容後按「重新翻譯成中文」。首次使用須下載翻譯模型；翻譯結果可能不準確，請自行核對。</p><label class="autoupload-option" style="display:flex;align-items:center;gap:9px;font-size:14px;margin:12px 0"><input id="autoUploadTranscript" type="checkbox" style="width:auto;accent-color:#087e74"> 語音辨識完成後自動儲存至 Google Drive（限雲端教材）</label><p class="muted">☁ 儲存會將英文及中文逐字稿存成同名 TXT 檔，放回教材所在資料夾。請先至「我的教材清單」重新授權完整 Drive 讀寫權限；此權限可管理帳號雲端硬碟內的檔案，請只在信任本網站時同意。辨識結果也會保存在目前瀏覽器。</p><p class="muted" id="asrStatus" role="status">瀏覽器端 Whisper 語音辨識（如一直沒有進度，請按 Ctrl+F5 清除舊版快取）：第一次會下載模型（約數十至數百 MB），僅辨識英文；速度依裝置而異。辨識期間請保持網頁開啟。</p><label for="englishText">英文逐字稿</label><textarea id="englishText" placeholder="對應音檔的英文逐字稿會顯示在這裡；也可以自行編輯。"></textarea><label for="chineseText">中文翻譯</label><textarea id="chineseText" placeholder="若雲端有同名中文翻譯檔，會自動顯示在這裡；也可自行編輯。"></textarea><h2 style="margin-top:18px">學習筆記</h2><textarea id="notes" placeholder="記錄單字、句型或個人學習心得。"></textarea><p class="muted">自動配對範例：Part 2-01.mp3 搭配 Part 2-01.en.srt（英文）、Part 2-01.zh.txt（中文）。支援 TXT / SRT / VTT。若沒有字幕檔，可使用「從音檔產生英文逐字稿」進行語音辨識；辨識不等於正確答案，請自行核對。</p><p class="muted">學習清單、筆記與完成狀態保存在目前瀏覽器的 localStorage；清除瀏覽資料可能遺失紀錄。</p></section><aside aria-label="教材清單與管理" class="panel" id="materialsSection"><div class="view-lead"><span>教材清單與管理</span><button class="secondary" id="backToPlayer" type="button">← 返回播放畫面</button></div>
+<div class="sidebar-list-head"><h2>📚 我的教材清單</h2><p class="muted">點選左側教材，即可在右側播放並檢視逐字稿。</p></div>
+<div class="toolbar"><input aria-label="搜尋教材" id="search" placeholder="搜尋教材名稱"/><button class="secondary smallbtn" id="sortName" title="依名稱排序">名稱排序</button></div>
+<div class="material-filters"><select id="categoryFilter" aria-label="自訂分類篩選"><option value="all">所有分類</option><option value="uncategorized">未分類</option></select><select id="filter" aria-label="題型篩選"><option value="all">全部題型</option><option value="Part 1">Part 1</option><option value="Part 2">Part 2</option><option value="Part 3">Part 3</option><option value="Part 4">Part 4</option></select></div>
+<details class="category-manager"><summary>📁 管理我的分類</summary><div class="category-controls"><input id="newCategoryName" maxlength="40" placeholder="例如：每日練習、模擬測驗" aria-label="新分類名稱"/><button id="createCategory" type="button">＋ 新增</button></div><div id="categoryManagerList" class="category-manager-list"></div><div class="category-cloud-actions"><button id="saveCategoryCloud" type="button">☁ 儲存分類至 Drive</button><button id="loadCategoryCloud" class="secondary" type="button">↻ 讀取雲端分類</button></div><p id="categoryCloudStatus" class="muted" role="status">分類仍會保存在本機；按「儲存分類至 Drive」後，其他裝置登入相同帳號並同步即可取得分類。僅同步分類名稱及雲端教材歸類，不包含音檔及筆記。</p></details>
+<div class="batch-mode-toggle"><button type="button" class="secondary smallbtn" id="toggleBatchMode" aria-pressed="false" aria-controls="batchToolbar">☑ 多選分類</button></div>
+<div class="batch-toolbar" id="batchToolbar" aria-label="教材批次分類工具">
+<div class="batch-top"><label for="selectAllVisible"><input type="checkbox" id="selectAllVisible"/> 全選目前顯示</label><button class="secondary smallbtn" id="clearBatchSelection" type="button">清除勾選</button><span class="batch-count" id="batchSelectedCount" role="status">已選 0 筆</span></div>
+<div class="batch-actions"><select id="batchCategory" aria-label="批次指定分類"><option value="" selected disabled>選擇要歸入的分類</option></select><button id="applyBatchCategory" type="button" disabled>套用分類</button></div>
+<div class="batch-hint" id="batchHint">可逐筆勾選，或全選目前搜尋／篩選結果；套用後按上方「儲存分類至 Drive」跨裝置共用。</div>
 </div>
-<h2>新增單一教材（選用）</h2><label>教材名稱</label><input id="title" placeholder="例如：Part 2 練習 01"><label>題型</label><select id="part"><option>Part 1 照片描述</option><option>Part 2 應答問題</option><option>Part 3 簡短對話</option><option>Part 4 簡短獨白</option></select><label>Google Drive 檔案分享連結</label><input id="url" placeholder="https://drive.google.com/file/d/.../view"><p class="muted">雲端檔案需授予適當檢視權限；以 Google 預覽播放器播放，速度與 A–B 功能不適用。</p><button id="add">加入 Google Drive 教材</button><label>或選擇本機音檔（MP3、M4A、WAV）</label><input id="files" type="file" accept="audio/*" multiple><p class="muted">本機檔案不會上傳；重新開啟網頁時需重新選取。</p><hr style="border:0;border-top:1px solid #e6eaf2;margin:20px 0"><h2>我的教材清單</h2><div class="toolbar"><input id="search" placeholder="搜尋教材名稱" aria-label="搜尋教材"><button id="sortName" class="secondary smallbtn" title="依名稱排序">名稱排序</button></div><select id="filter"><option value="all">全部題型</option><option value="Part 1">Part 1</option><option value="Part 2">Part 2</option><option value="Part 3">Part 3</option><option value="Part 4">Part 4</option></select><div id="list"></div></aside><section class="panel" id="playerSection"><div class="stats"><div><span class="muted">教材數量</span><strong id="count">0</strong></div><div><span class="muted">已完成</span><strong id="done">0</strong></div></div><h2 id="now">請先選擇聽力教材</h2><div id="localPlayer" class="player"><audio id="audio" preload="metadata"></audio><input id="seek" type="range" min="0" max="1000" value="0"><div class="time"><span id="current">00:00</span><span id="duration">00:00</span></div><div class="actions"><button class="secondary" id="prev">上一首</button><button class="secondary" id="back">−5 秒</button><button id="play">▶ 播放</button><button class="secondary" id="forward">+5 秒</button><button class="secondary" id="next">下一首</button></div><div class="meta"><label style="margin:0">速度</label><select id="speed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select><button class="secondary" id="markA">設 A 點</button><button class="secondary" id="markB">設 B 點</button><button class="secondary" id="clearAB">清除區間</button><span id="ab" class="pill">未設定 A–B</span></div></div><div id="drivePlayer" class="hidden"><div class="notice">Google Drive 使用官方預覽播放器；如無法播放，請確認共用權限，或改用本機檔案模式。</div><iframe id="frame" class="preview" title="Google Drive 聽力預覽" allow="autoplay"></iframe><p><a id="openDrive" target="_blank" rel="noopener noreferrer">在 Google Drive 開啟檔案</a></p></div><div class="row" style="margin:16px 0"><button id="complete">✓ 標記完成</button><button id="remove" class="danger">刪除此教材</button></div><h2>中英文逐字稿／學習筆記</h2><textarea id="notes" placeholder="輸入英文逐字稿、中文翻譯或筆記；會儲存在此瀏覽器。"></textarea><p class="muted">學習清單、筆記與完成狀態保存在目前瀏覽器的 localStorage；清除瀏覽資料可能遺失紀錄。</p></section></main><script src="https://accounts.google.com/gsi/client" async defer></script>
+<div id="list"></div>
+<details class="sidebar-settings"><summary>➕ 新增教材（選用）</summary><div class="sidebar-settings-body">
+
+<h2>新增單一教材（選用）</h2><label>教材名稱</label><input id="title" placeholder="例如：Part 2 練習 01"/><label>題型</label><select id="part"><option>Part 1 照片描述</option><option>Part 2 應答問題</option><option>Part 3 簡短對話</option><option>Part 4 簡短獨白</option></select><label>Google Drive 檔案分享連結</label><input id="url" placeholder="https://drive.google.com/file/d/.../view"/><p class="muted">雲端檔案需授予適當檢視權限；以 Google 預覽播放器播放，速度與 A–B 功能不適用。</p><button id="add">加入 Google Drive 教材</button><label>或選擇本機音檔（MP3、M4A、WAV）</label><input accept="audio/*" id="files" multiple="" type="file"/><p class="muted">本機檔案不會上傳；重新開啟網頁時需重新選取。</p><hr style="border:0;border-top:1px solid #e6eaf2;margin:20px 0"/></div></details></aside></main><script async="" defer="" src="https://accounts.google.com/gsi/client"></script>
 <script>
-const $=id=>document.getElementById(id),key='toeic_lessons_v1';let tracks=[];try{tracks=JSON.parse(localStorage.getItem(key))||[]}catch{}let currentId=null,A=null,B=null,objectUrls=[],accessToken='',tokenClient=null,cloudBlobUrl=null,cloudLoading=false;const configKey='toeic_drive_config_v1';let cfg={};try{cfg=JSON.parse(localStorage.getItem(configKey))||{}}catch{};const audio=$('audio');function save(){localStorage.setItem(key,JSON.stringify(tracks.filter(t=>t.type!=='local')))}function fmt(s){if(!Number.isFinite(s))return '00:00';return Math.floor(s/60).toString().padStart(2,'0')+':'+Math.floor(s%60).toString().padStart(2,'0')}function get(){return tracks.find(t=>t.id===currentId)}function extract(url){try{let u=new URL(url),h=u.hostname.toLowerCase();if(h!=='drive.google.com'&&h!=='docs.google.com')return null;let m=u.pathname.match(/\/file\/d\/([\w-]+)/);let id=m?.[1]||u.searchParams.get('id');return id&&/^[\w-]+$/.test(id)?id:null}catch{return null}}function render(){let part=$('filter').value;let q=$('search').value.trim().toLowerCase();let shown=tracks.filter(t=>(part==='all'||t.part.startsWith(part))&&t.title.toLowerCase().includes(q));$('list').replaceChildren();for(let t of shown){let el=document.createElement('div');el.className='track'+(t.id===currentId?' active':'');let n=document.createElement('div');n.className='name';n.textContent=(t.done?'✅ ':'🎧 ')+t.title;let sm=document.createElement('small');sm.textContent=t.part+' · '+(t.type==='cloud'?'Drive API':t.type==='drive'?'Drive 分享':'本機') ;el.append(n,sm);el.setAttribute('role','button');el.tabIndex=0;el.onclick=()=>select(t.id,true);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(t.id,true)}};$('list').append(el)}$('count').textContent=tracks.length;$('done').textContent=tracks.filter(t=>t.done).length;if(!shown.length)$('list').textContent='尚無符合的教材';let t=get();$('now').textContent=t?t.title:'請先選擇聽力教材';$('complete').disabled=!t;$('remove').disabled=!t;$('notes').disabled=!t;$('complete').textContent=t?.done?'取消完成標記':'✓ 標記完成'}function select(id,fromList=false){let old=get();if(old)old.notes=$('notes').value;save();audio.pause();audio.removeAttribute('src');audio.load();if(cloudBlobUrl){URL.revokeObjectURL(cloudBlobUrl);cloudBlobUrl=null}$('frame').src='about:blank';currentId=id;A=B=null;abLabel();let t=get();if(!t){audio.removeAttribute('src');$('notes').value='';$('drivePlayer').classList.add('hidden');$('localPlayer').classList.remove('hidden');render();return}$('notes').value=t.notes||'';let drive=t.type==='drive';$('localPlayer').classList.toggle('hidden',drive);$('drivePlayer').classList.toggle('hidden',!drive);if(t.type==='cloud'){audio.removeAttribute('src');$('current').textContent='00:00';$('duration').textContent='00:00';$('play').textContent='▶ 載入並播放';}else if(drive){$('frame').src='https://drive.google.com/file/d/'+t.fileId+'/preview';$('openDrive').href='https://drive.google.com/file/d/'+t.fileId+'/view'}else{audio.src=t.src;audio.load()}render();if(fromList&&t){$('playerSection').scrollIntoView({behavior:'smooth',block:'start'});if(t.type==='cloud'){if(accessToken)void loadCloudAudio(t);else status('已選擇教材。請先按「Google 登入並同步教材」取得播放權限。',true)}else if(t.type==='local'){audio.play().catch(()=>{$('play').textContent='▶ 播放'})}}}function abLabel(){$('ab').textContent='A: '+(A===null?'—':fmt(A))+' / B: '+(B===null?'—':fmt(B))}function shift(n){let i=tracks.findIndex(t=>t.id===currentId);if(i<0||!tracks.length)return;select(tracks[(i+n+tracks.length)%tracks.length].id)}$('add').onclick=()=>{let id=extract($('url').value.trim());if(!id){alert('請輸入有效的 Google Drive 檔案分享連結');return}let t={id:crypto.randomUUID(),type:'drive',fileId:id,title:$('title').value.trim()||'未命名教材',part:$('part').value,notes:'',done:false};tracks.push(t);save();$('url').value='';$('title').value='';select(t.id)};$('files').onchange=e=>{let files=[...e.target.files];for(let f of files){if(!f.type.startsWith('audio/')&&!/\.(mp3|m4a|wav|ogg)$/i.test(f.name))continue;let src=URL.createObjectURL(f);objectUrls.push(src);tracks.push({id:crypto.randomUUID(),type:'local',src,title:f.name,part:$('part').value,notes:'',done:false})}if(files.length)select(tracks[tracks.length-1].id);e.target.value=''};$('filter').onchange=render;$('search').oninput=render;$('sortName').onclick=()=>{tracks.sort((a,b)=>a.title.localeCompare(b.title,'zh-Hant',{numeric:true}));save();render()};$('play').onclick=async()=>{let t=get();if(!t)return;if(t.type==='cloud'&&!audio.src){await loadCloudAudio(t);return}if(audio.paused)audio.play().catch(()=>alert('音檔無法播放，請檢查格式'));else audio.pause()};audio.onplay=()=>{$('play').textContent='Ⅱ 暫停'};audio.onpause=()=>{$('play').textContent='▶ 播放'};audio.ontimeupdate=()=>{if(A!==null&&B!==null&&audio.currentTime>=B)audio.currentTime=A;$('current').textContent=fmt(audio.currentTime);$('seek').value=audio.duration?Math.round(audio.currentTime/audio.duration*1000):0};audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration)};audio.onended=()=>shift(1);$('seek').oninput=()=>{if(audio.duration)audio.currentTime=audio.duration*Number($('seek').value)/1000};$('speed').onchange=()=>audio.playbackRate=Number($('speed').value);$('back').onclick=()=>audio.currentTime=Math.max(0,audio.currentTime-5);$('forward').onclick=()=>audio.currentTime=Math.min(audio.duration||Infinity,audio.currentTime+5);$('prev').onclick=()=>shift(-1);$('next').onclick=()=>shift(1);$('markA').onclick=()=>{A=audio.currentTime;if(B!==null&&B<=A)B=null;abLabel()};$('markB').onclick=()=>{if(A===null){alert('請先設定 A 點');return}if(audio.currentTime<=A){alert('B 點必須晚於 A 點');return}B=audio.currentTime;abLabel()};$('clearAB').onclick=()=>{A=B=null;abLabel()};$('complete').onclick=()=>{let t=get();if(!t)return;t.done=!t.done;save();render()};$('remove').onclick=()=>{let t=get();if(!t||!confirm('確定刪除此教材？'))return;if(t.type==='local')URL.revokeObjectURL(t.src);tracks=tracks.filter(x=>x.id!==t.id);save();select(tracks[0]?.id||null)};$('notes').oninput=()=>{let t=get();if(t){t.notes=$('notes').value;save()}};
+const $=id=>document.getElementById(id),key='toeic_lessons_v1';let tracks=[];try{tracks=JSON.parse(localStorage.getItem(key))||[]}catch{}let currentId=null,A=null,B=null,transcriptIndex=new Map(),transcriptRequest=0,objectUrls=[],accessToken='',tokenClient=null,cloudBlobUrl=null,cloudLoading=false;const configKey='toeic_drive_config_v1';let cfg={};try{cfg=JSON.parse(localStorage.getItem(configKey))||{}}catch{};let categoryCloudDirty=false,categoryCloudVersion='',categoryCloudFileId='',categoryCloudLoading=false;const categoryKey='toeic_custom_categories_v1';let categories=[];try{const stored=JSON.parse(localStorage.getItem(categoryKey));if(Array.isArray(stored))categories=stored.filter(c=>typeof c==='string'&&c.trim()).map(c=>c.trim()).filter((c,i,a)=>a.indexOf(c)===i)}catch{};
+const selectedTrackIds=new Set();
+let batchMode=false;
+function setBatchMode(enabled){
+ batchMode=!!enabled;
+ document.body.classList.toggle('batch-mode',batchMode);
+ const toggle=$('toggleBatchMode');
+ toggle.textContent=batchMode?'✓ 完成多選':'☑ 多選分類';
+ toggle.setAttribute('aria-pressed',String(batchMode));
+ if(!batchMode)selectedTrackIds.clear();
+ render();
+}
+$('toggleBatchMode').onclick=()=>setBatchMode(!batchMode);
+function refreshBatchCategoryOptions(){
+ const picker=$('batchCategory'),previous=picker.value;
+ picker.replaceChildren(new Option('選擇要歸入的分類',''),new Option('📂 未分類','__uncategorized__'));
+ for(const name of categories)picker.add(new Option(name,'category:'+name));
+ picker.value=(previous==='__uncategorized__'||(previous.startsWith('category:')&&categories.includes(previous.slice(9))))?previous:'';
+}
+function updateBatchControls(){
+ const shown=visibleTracks(),selected=shown.filter(t=>selectedTrackIds.has(t.id)).length;
+ const all=$('selectAllVisible');all.checked=shown.length>0&&selected===shown.length;
+ all.indeterminate=selected>0&&selected<shown.length;
+ $('batchSelectedCount').textContent='已選 '+selectedTrackIds.size+' 筆'+(selectedTrackIds.size!==selected?'（本頁 '+selected+' 筆）':'');
+ $('applyBatchCategory').disabled=!selectedTrackIds.size||!$('batchCategory').value;
+ $('clearBatchSelection').disabled=!selectedTrackIds.size;
+}
+$('selectAllVisible').onchange=e=>{
+ for(const t of visibleTracks())if(e.target.checked)selectedTrackIds.add(t.id);else selectedTrackIds.delete(t.id);
+ render();
+};
+$('clearBatchSelection').onclick=()=>{selectedTrackIds.clear();render()};
+$('batchCategory').onchange=updateBatchControls;
+$('applyBatchCategory').onclick=()=>{
+ const val=$('batchCategory').value;
+ const category=val==='__uncategorized__'?'':val.startsWith('category:')?val.slice(9):null;
+ if(category===null||(category!==''&&!categories.includes(category)))return alert('請先選擇有效的分類。');
+ const chosen=tracks.filter(t=>selectedTrackIds.has(t.id));
+ if(!chosen.length)return;
+ const changed=chosen.filter(t=>(t.category||'')!==category);
+ if(!changed.length){$('batchHint').textContent='所選教材已屬於該分類，未進行變更。';return}
+ for(const t of changed)t.category=category;
+ categoryCloudDirty=true;
+ updateCategoryCloudStatus('已批次修改 '+changed.length+' 筆教材分類，尚未儲存到 Google Drive。');
+ save();selectedTrackIds.clear();refreshCategoryUI();setBatchMode(false);
+ $('batchHint').textContent='✅ 已更新 '+changed.length+' 筆教材為「'+(category||'未分類')+'」。如需跨裝置共用，請按「儲存分類至 Drive」。';
+};
+function saveCategories(){categoryCloudDirty=true;updateCategoryCloudStatus('分類已修改，尚未儲存到 Google Drive。');try{localStorage.setItem(categoryKey,JSON.stringify(categories))}catch(e){alert('分類未能儲存，請檢查瀏覽器儲存空間。')}}
+function categoryVisible(t){const chosen=$('categoryFilter').value;return chosen==='all'||(chosen==='uncategorized'?!t.category:t.category===chosen.slice(9))}
+function visibleTracks(){const part=$('filter').value,q=$('search').value.trim().toLowerCase();return tracks.filter(t=>categoryVisible(t)&&(part==='all'||(t.part||'').startsWith(part))&&(t.title||'').toLowerCase().includes(q))}
+function refreshCategoryUI(){const filter=$('categoryFilter'),previous=filter.value;filter.replaceChildren(new Option('所有分類','all'),new Option('未分類','uncategorized'));categories.forEach(c=>filter.add(new Option(c,'category:'+c)));if(previous.startsWith('category:')&&categories.includes(previous.slice(9)))filter.value=previous;else if(previous==='uncategorized')filter.value=previous;else filter.value='all';refreshBatchCategoryOptions();const mgr=$('categoryManagerList');mgr.replaceChildren();if(!categories.length){let p=document.createElement('p');p.className='muted';p.textContent='尚未建立自訂分類。';mgr.append(p)}for(const c of categories){const line=document.createElement('div');line.className='category-item';const label=document.createElement('span');label.textContent=c+'（'+tracks.filter(t=>t.category===c).length+'）';const rename=document.createElement('button');rename.className='secondary';rename.textContent='重新命名';rename.onclick=()=>{const name=prompt('請輸入新的分類名稱：',c);if(name===null)return;const next=name.trim();if(!next||next.length>40){alert('分類名稱須為 1～40 個字。');return}if(next!==c&&categories.includes(next)){alert('分類已存在。');return}const wasSelected=filter.value==='category:'+c;categories[categories.indexOf(c)]=next;tracks.forEach(t=>{if(t.category===c)t.category=next});saveCategories();save();refreshCategoryUI();if(wasSelected)filter.value='category:'+next;render()};const del=document.createElement('button');del.className='danger';del.textContent='刪除';del.onclick=()=>{if(!confirm('刪除分類「'+c+'」？其教材將移至「未分類」，教材本身不會刪除。'))return;categories=categories.filter(x=>x!==c);tracks.forEach(t=>{if(t.category===c)t.category='' });saveCategories();save();refreshCategoryUI();render()};line.append(label,rename,del);mgr.append(line)}}
+$('createCategory').onclick=()=>{const box=$('newCategoryName'),name=box.value.trim();if(!name||name.length>40){alert('請輸入 1～40 個字的分類名稱。');return}if(categories.includes(name)){alert('此分類已存在。');return}categories.push(name);saveCategories();box.value='';refreshCategoryUI();$('categoryFilter').value='category:'+name;render()};$('newCategoryName').addEventListener('keydown',e=>{if(e.key==='Enter'){$('createCategory').click()}});$('categoryFilter').onchange=render;
+function assignTrackCategory(t){const choices=['0. 未分類',...categories.map((name,i)=>(i+1)+'. '+name)];if(!categories.length){alert('請先使用「管理我的分類」新增分類。');return}const current=categories.indexOf(t.category);const answer=prompt('請輸入分類編號：\n'+choices.join('\n'),String(current+1));if(answer===null)return;const n=Number(answer.trim());if(!Number.isInteger(n)||n<0||n>categories.length){alert('請輸入正確的分類編號。');return}t.category=n===0?'':categories[n-1];categoryCloudDirty=true;updateCategoryCloudStatus('教材歸類已修改，尚未儲存到 Google Drive。');save();render()}
+refreshCategoryUI();
+const audio=$('audio');function save(){localStorage.setItem(key,JSON.stringify(tracks.filter(t=>t.type!=='local')))}function fmt(s){if(!Number.isFinite(s))return '00:00';return Math.floor(s/60).toString().padStart(2,'0')+':'+Math.floor(s%60).toString().padStart(2,'0')}function get(){return tracks.find(t=>t.id===currentId)}function extract(url){try{let u=new URL(url),h=u.hostname.toLowerCase();if(h!=='drive.google.com'&&h!=='docs.google.com')return null;let m=u.pathname.match(/\/file\/d\/([\w-]+)/);let id=m?.[1]||u.searchParams.get('id');return id&&/^[\w-]+$/.test(id)?id:null}catch{return null}}function render(){for(const id of [...selectedTrackIds])if(!tracks.some(t=>t.id===id))selectedTrackIds.delete(id);const shown=visibleTracks();$('list').replaceChildren();for(const t of shown){const el=document.createElement('div');el.className='track'+(t.id===currentId?' active':'')+(selectedTrackIds.has(t.id)?' batch-selected':'');const head=document.createElement('div');head.className='track-head';const checkLabel=document.createElement('label');checkLabel.className='track-check';checkLabel.title='勾選 '+t.title;checkLabel.onclick=e=>e.stopPropagation();const check=document.createElement('input');check.type='checkbox';check.checked=selectedTrackIds.has(t.id);check.setAttribute('aria-label','批次選取 '+t.title);check.onchange=e=>{e.stopPropagation();if(check.checked)selectedTrackIds.add(t.id);else selectedTrackIds.delete(t.id);el.classList.toggle('batch-selected',check.checked);updateBatchControls()};checkLabel.append(check);const n=document.createElement('div');n.className='name';n.textContent=(t.done?'✅ ':'🎧 ')+t.title;const assign=document.createElement('button');assign.type='button';assign.className='assign-category';assign.textContent='📁 分類';assign.setAttribute('aria-label','設定 '+t.title+' 的分類');assign.onclick=e=>{e.stopPropagation();assignTrackCategory(t)};if(batchMode)head.append(checkLabel);head.append(n,assign);el.append(head);if(t.category){const tag=document.createElement('span');tag.className='track-category';tag.textContent=t.category;el.append(tag)}const sm=document.createElement('small');sm.textContent=(t.part||'')+' · '+(t.type==='cloud'?'Drive API':t.type==='drive'?'Drive 分享':'本機');el.append(sm);el.setAttribute('role','button');el.tabIndex=0;el.onclick=()=>select(t.id,true);el.onkeydown=e=>{if(e.target!==el)return;if(e.key==='Enter'||e.key===' '){e.preventDefault();select(t.id,true)}};$('list').append(el)}updateBatchControls();$('count').textContent=tracks.length;$('done').textContent=tracks.filter(t=>t.done).length;if(!shown.length)$('list').textContent='尚無符合的教材';let t=get();$('now').textContent=t?t.title:'請先選擇聽力教材';$('complete').disabled=!t;$('remove').disabled=!t;$('notes').disabled=!t;$('englishText').disabled=!t;$('chineseText').disabled=!t;$('reloadTranscript').disabled=!t;$('saveTranscriptDrive').disabled=!t||t.type!=='cloud';$('complete').textContent=t?.done?'取消完成標記':'✓ 標記完成'}function select(id,fromList=false){++transcriptRequest;let old=get();if(old){old.notes=$('notes').value;old.englishText=$('englishText').value;old.chineseText=$('chineseText').value}save();audio.pause();audio.removeAttribute('src');audio.load();if(cloudBlobUrl){URL.revokeObjectURL(cloudBlobUrl);cloudBlobUrl=null}$('frame').src='about:blank';currentId=id;A=B=null;abLabel();let t=get();if(!t){audio.removeAttribute('src');$('notes').value='';$('englishText').value='';$('chineseText').value='';$('transcriptStatus').textContent='請先選擇教材';$('drivePlayer').classList.add('hidden');$('localPlayer').classList.remove('hidden');render();return}$('notes').value=t.notes||'';$('englishText').value=t.englishText||'';$('chineseText').value=t.chineseText||'';$('transcriptStatus').textContent=t.type==='cloud'?'正在檢查對應逐字稿…':'可匯入 TXT、SRT、VTT 逐字稿，或自行輸入。';void loadTranscript(t);let drive=t.type==='drive';$('localPlayer').classList.toggle('hidden',drive);$('drivePlayer').classList.toggle('hidden',!drive);if(t.type==='cloud'){audio.removeAttribute('src');$('current').textContent='00:00';$('duration').textContent='00:00';$('play').textContent='▶ 載入並播放';}else if(drive){$('frame').src='https://drive.google.com/file/d/'+t.fileId+'/preview';$('openDrive').href='https://drive.google.com/file/d/'+t.fileId+'/view'}else{audio.src=t.src;audio.load()}render();if(fromList&&t){if(window.matchMedia('(max-width: 850px)').matches)showView('player');if(t.type==='cloud'){if(accessToken)void loadCloudAudio(t);else status('已選擇教材。請在右上角「Google Drive」按「Google 連線／快速續用」取得播放權限。',true)}else if(t.type==='local'){audio.play().catch(()=>{$('play').textContent='▶ 播放'})}}}function abLabel(){$('ab').textContent='A: '+(A===null?'—':fmt(A))+' / B: '+(B===null?'—':fmt(B))}function shift(n,playAfter=false){let i=tracks.findIndex(t=>t.id===currentId);if(i<0||!tracks.length)return;let target=tracks[(i+n+tracks.length)%tracks.length];select(target.id,playAfter)}
+let repeatOneOn=false;try{repeatOneOn=localStorage.getItem('toeic_repeat_one_v1')==='true'}catch{}
+function paintRepeatOne(){$('repeatOne').textContent='🔂 單曲重複：'+(repeatOneOn?'開啟':'關閉');$('repeatOne').setAttribute('aria-pressed',String(repeatOneOn));audio.loop=repeatOneOn;if(repeatOneOn&&autoNextOn){autoNextOn=false;try{localStorage.setItem('toeic_auto_next_v1','false')}catch{}paintAutoNext()}}
+$('repeatOne').onclick=()=>{repeatOneOn=!repeatOneOn;try{localStorage.setItem('toeic_repeat_one_v1',String(repeatOneOn))}catch{}paintRepeatOne()};
+let autoNextOn=false;try{autoNextOn=localStorage.getItem('toeic_auto_next_v1')==='true'}catch{}
+function paintAutoNext(){$('autoNext').textContent='▶ 自動播放下一首：'+(autoNextOn?'開啟':'關閉');$('autoNext').setAttribute('aria-pressed',String(autoNextOn))}
+$('autoNext').onclick=()=>{autoNextOn=!autoNextOn;if(autoNextOn&&repeatOneOn){repeatOneOn=false;try{localStorage.setItem('toeic_repeat_one_v1','false')}catch{}paintRepeatOne()}try{localStorage.setItem('toeic_auto_next_v1',String(autoNextOn))}catch{}paintAutoNext()};paintAutoNext();paintRepeatOne();
+function autoAdvance(){if(repeatOneOn){audio.currentTime=0;audio.play().catch(()=>{});return}if(!autoNextOn)return;let visible=visibleTracks();let i=visible.findIndex(t=>t.id===currentId);if(i<0||i===visible.length-1)return;let next=visible[i+1];if(next.type==='drive'){select(next.id,true);$('autoNextHelp').textContent='Google Drive 分享預覽無法偵測播放結束，後續請使用 Drive API 音檔。'}else select(next.id,true)}$('add').onclick=()=>{let id=extract($('url').value.trim());if(!id){alert('請輸入有效的 Google Drive 檔案分享連結');return}let t={id:crypto.randomUUID(),type:'drive',fileId:id,title:$('title').value.trim()||'未命名教材',part:$('part').value,category:($('categoryFilter').value.startsWith('category:')?$('categoryFilter').value.slice(9):''),notes:'',done:false};tracks.push(t);save();$('url').value='';$('title').value='';select(t.id)};$('files').onchange=e=>{let files=[...e.target.files];for(let f of files){if(!f.type.startsWith('audio/')&&!/\.(mp3|m4a|wav|ogg)$/i.test(f.name))continue;let src=URL.createObjectURL(f);objectUrls.push(src);tracks.push({id:crypto.randomUUID(),type:'local',src,title:f.name,part:$('part').value,category:($('categoryFilter').value.startsWith('category:')?$('categoryFilter').value.slice(9):''),notes:'',done:false})}if(files.length)select(tracks[tracks.length-1].id);e.target.value=''};$('filter').onchange=render;$('search').oninput=render;$('sortName').onclick=()=>{tracks.sort((a,b)=>a.title.localeCompare(b.title,'zh-Hant',{numeric:true}));save();render()};$('play').onclick=async()=>{let t=get();if(!t)return;if(t.type==='cloud'&&!audio.src){await loadCloudAudio(t);return}if(audio.paused)audio.play().catch(()=>alert('音檔無法播放，請檢查格式'));else audio.pause()};audio.onplay=()=>{$('play').textContent='Ⅱ 暫停'};audio.onpause=()=>{$('play').textContent='▶ 播放'};audio.ontimeupdate=()=>{if(A!==null&&B!==null&&audio.currentTime>=B)audio.currentTime=A;$('current').textContent=fmt(audio.currentTime);$('seek').value=audio.duration?Math.round(audio.currentTime/audio.duration*1000):0};audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration)};audio.onended=autoAdvance;$('seek').oninput=()=>{if(audio.duration)audio.currentTime=audio.duration*Number($('seek').value)/1000};$('speed').onchange=()=>audio.playbackRate=Number($('speed').value);$('back').onclick=()=>audio.currentTime=Math.max(0,audio.currentTime-5);$('forward').onclick=()=>audio.currentTime=Math.min(audio.duration||Infinity,audio.currentTime+5);$('prev').onclick=()=>shift(-1,true);$('next').onclick=()=>shift(1,true);$('markA').onclick=()=>{A=audio.currentTime;if(B!==null&&B<=A)B=null;abLabel()};$('markB').onclick=()=>{if(A===null){alert('請先設定 A 點');return}if(audio.currentTime<=A){alert('B 點必須晚於 A 點');return}B=audio.currentTime;abLabel()};$('clearAB').onclick=()=>{A=B=null;abLabel()};$('complete').onclick=()=>{let t=get();if(!t)return;t.done=!t.done;save();render()};$('remove').onclick=()=>{let t=get();if(!t||!confirm('確定刪除此教材？'))return;if(t.type==='local')URL.revokeObjectURL(t.src);tracks=tracks.filter(x=>x.id!==t.id);save();refreshCategoryUI();select(tracks[0]?.id||null)};$('notes').oninput=()=>{let t=get();if(t){t.notes=$('notes').value;save()}};for(let field of ['englishText','chineseText'])$(field).oninput=()=>{let t=get();if(t){t[field]=$(field).value;save()}};
 function status(message,error=false){$('driveInfo').textContent=message;$('driveInfo').className='status '+(error?'err':'ok')}
 function folderFrom(s){s=s.trim();let m=s.match(/\/folders\/([a-zA-Z0-9_-]+)/);return m?m[1]:/^[a-zA-Z0-9_-]{10,}$/.test(s)?s:null}
 function saveConfig(){/* 連線值固定於網站設定，不保存舊版瀏覽器輸入值 */}
@@ -17,13 +235,438 @@ const DEFAULT_FOLDER_ID='1T7ukANBenmR298EYb2gFcpv1SAWtrMev';
 $('clientId').value=DEFAULT_CLIENT_ID;$('folderId').value=DEFAULT_FOLDER_ID;
 
 function googleReady(){if(location.protocol==='file:')throw Error('請透過 GitHub Pages HTTPS 網址，或使用 http://localhost:8765 開啟網站；不能直接以 file:// 開啟 HTML 使用 Google 登入。');if(!window.google?.accounts?.oauth2)throw Error('Google 登入元件尚未載入，請確認網路可連線至 accounts.google.com。');let cid=$('clientId').value.trim();if(!/^[^\s]+\.apps\.googleusercontent\.com$/.test(cid))throw Error('請輸入有效的 OAuth 用戶端 ID');return cid}
-$('connect').onclick=()=>{try{let cid=googleReady();saveConfig();tokenClient=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/drive.readonly',callback:async response=>{if(response.error||!response.access_token){status('登入授權失敗：'+(response.error||'未取得存取權杖'),true);return}accessToken=response.access_token;status('授權成功，正在讀取資料夾…');await syncDrive()}});tokenClient.requestAccessToken({prompt:'consent'})}catch(e){status(e.message,true)}};
-async function driveFetch(url){let res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});if(!res.ok){let reason='';try{let j=await res.json();reason=j.error?.message||''}catch{}throw Error('Google Drive API HTTP '+res.status+' '+reason+(res.status===401?'（請重新登入授權）':''))}return res}
-async function syncDrive(){if(!accessToken){status('請先按「Google 登入授權」，再同步資料夾。',true);return}let fid=folderFrom($('folderId').value);if(!fid){status('請填入正確的 Google Drive 資料夾 ID 或連結。',true);return}saveConfig();$('sync').disabled=true;try{let files=[],page='';do{let qs=new URLSearchParams({q:"'"+fid+"' in parents and trashed = false and (mimeType = 'audio/mpeg' or mimeType = 'audio/mp4' or mimeType = 'audio/x-m4a' or mimeType = 'audio/wav' or mimeType = 'audio/x-wav' or name contains '.mp3' or name contains '.m4a' or name contains '.wav')",fields:'nextPageToken,files(id,name,mimeType,size,description)',pageSize:'1000',orderBy:'name'});if(page)qs.set('pageToken',page);let data=await(await driveFetch('https://www.googleapis.com/drive/v3/files?'+qs)).json();files.push(...(data.files||[]));page=data.nextPageToken||''}while(page);files=files.filter(f=>/\.(mp3|m4a|wav|ogg)$/i.test(f.name)||/^audio\//i.test(f.mimeType));let existing=new Map(tracks.filter(t=>t.type==='cloud').map(t=>[t.fileId,t]));let updated=files.map(f=>{let t=existing.get(f.id);return t?{...t,title:f.name}:{id:'cloud_'+f.id,type:'cloud',fileId:f.id,title:f.name,part:/part\s*([1-4])/i.test(f.name)?'Part '+f.name.match(/part\s*([1-4])/i)[1]+' '+['','照片描述','應答問題','簡短對話','簡短獨白'][Number(f.name.match(/part\s*([1-4])/i)[1])]:'Part 1 照片描述',notes:'',done:false}});let keep=tracks.filter(t=>t.type!=='cloud');tracks=[...updated,...keep];save();if(!get()&&tracks.length)select(tracks[0].id);else render();status('同步成功：找到 '+files.length+' 個音檔。同步時間 '+new Date().toLocaleString('zh-TW'))}catch(e){status('同步失敗：'+e.message,true)}finally{$('sync').disabled=false}}
-$('sync').onclick=syncDrive;
-$('disconnect').onclick=()=>{if(accessToken&&window.google?.accounts?.oauth2)google.accounts.oauth2.revoke(accessToken,()=>{});accessToken='';tokenClient=null;audio.pause();status('已清除本次 Google 授權權杖。保留教材名稱和學習筆記。')};
-$('clearCloud').onclick=()=>{if(!confirm('清除本機保存的雲端教材清單及相關筆記？不會刪除 Google Drive 檔案。'))return;tracks=tracks.filter(t=>t.type!=='cloud');save();select(tracks[0]?.id||null);status('已清空本機雲端教材清單')};
+// Google Identity Services: no refresh token or long-lived credential stored in localStorage.
+// A short-lived access token may survive a reload within this tab via sessionStorage.
+const SESSION_AUTH_KEY='toeic_drive_session_auth_v3', AUTH_PREFERENCE_KEY='toeic_drive_authorized_once_v2';
+const DRIVE_WRITE_SCOPE='https://www.googleapis.com/auth/drive';
+const DRIVE_SCOPES=DRIVE_WRITE_SCOPE;
+let tokenExpiresAt=0, authBusy=false,grantedScopes='';
+function restoreSessionAuth(){
+ try{const data=JSON.parse(sessionStorage.getItem(SESSION_AUTH_KEY)||'null');
+  if(data?.token && Number(data.expiresAt)>Date.now()+60000){accessToken=data.token;tokenExpiresAt=data.expiresAt;grantedScopes=data.scope||'';return true}
+  sessionStorage.removeItem(SESSION_AUTH_KEY);
+ }catch{}return false;
+}
+function clearSessionAuth(){accessToken='';tokenExpiresAt=0;grantedScopes='';try{sessionStorage.removeItem(SESSION_AUTH_KEY)}catch{}}
+function setSessionAuth(response){
+ accessToken=response.access_token;
+ tokenExpiresAt=Date.now()+Math.max(60,Number(response.expires_in)||3600)*1000;
+ grantedScopes=response.scope||'';
+ try{sessionStorage.setItem(SESSION_AUTH_KEY,JSON.stringify({token:accessToken,expiresAt:tokenExpiresAt,scope:grantedScopes}));localStorage.setItem(AUTH_PREFERENCE_KEY,'true')}catch{}
+}
+function initGoogleTokenClient(){
+ if(tokenClient)return tokenClient;
+ let cid=googleReady();
+ tokenClient=google.accounts.oauth2.initTokenClient({
+  client_id:cid,scope:DRIVE_SCOPES,include_granted_scopes:true,
+  callback:async response=>{
+   authBusy=false;$('connect').disabled=false;$('reauthorize').disabled=false;
+   if(response.error||!response.access_token){
+    status('Google 無法自動取得授權：'+(response.error||'未取得權杖')+'。可按「重新授權」由 Google 確認帳號。',true);return;
+   }
+   setSessionAuth(response);status('Google 授權成功，正在同步教材…');await syncDrive();
+  },
+  error_callback:error=>{
+   authBusy=false;$('connect').disabled=false;$('reauthorize').disabled=false;
+   status('Google 登入視窗無法開啟或已關閉（'+(error?.type||'未知原因')+'）。請允許瀏覽器彈出視窗，再按「Google 連線／快速續用」。',true);
+  }
+ });return tokenClient;
+}
+function requestGoogleToken(forceConsent=false){
+ try{
+  if(authBusy)return;
+  if(!forceConsent&&accessToken&&tokenExpiresAt>Date.now()+60000){void syncDrive();return}
+  const client=initGoogleTokenClient();authBusy=true;
+  $('connect').disabled=true;$('reauthorize').disabled=true;
+  status(forceConsent?'正在開啟 Google 帳號重新授權…':'正在嘗試沿用已授權的 Google 帳號…');
+  // Empty prompt avoids repeated consent; Google can still require account interaction.
+  client.requestAccessToken({prompt:forceConsent?'consent':''});
+ }catch(e){authBusy=false;$('connect').disabled=false;$('reauthorize').disabled=false;status(e.message,true)}
+}
+$('connect').onclick=()=>requestGoogleToken(false);
+$('reauthorize').onclick=()=>requestGoogleToken(true);
+restoreSessionAuth();
+if(accessToken)status('已恢復此分頁的 Google 授權，可播放及同步教材。');
+else if(tracks.some(t=>t.type==='cloud'))status('已載入本機保存的教材清單與筆記。使用 Google Drive 音檔時，請按「Google 連線／快速續用」。');
+
+async function driveFetch(url){if(!accessToken||tokenExpiresAt&&Date.now()>=tokenExpiresAt-30000){clearSessionAuth();throw Error('Google 存取權杖已到期，請按「Google 連線／快速續用」續用授權。')}let res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});if(!res.ok){let reason='';try{let j=await res.json();reason=j.error?.message||''}catch{}if(res.status===401)clearSessionAuth();throw Error('Google Drive API HTTP '+res.status+' '+reason+(res.status===401?'（請重新登入授權）':''))}return res}
+async function listFolderFiles(fid){let files=[],page='';do{let qs=new URLSearchParams({q:"'"+fid+"' in parents and trashed = false",fields:'nextPageToken,files(id,name,mimeType,size,description)',supportsAllDrives:'true',includeItemsFromAllDrives:'true',pageSize:'1000',orderBy:'name'});if(page)qs.set('pageToken',page);let data=await(await driveFetch('https://www.googleapis.com/drive/v3/files?'+qs)).json();files.push(...(data.files||[]));page=data.nextPageToken||''}while(page);return files}
+function transcriptIdentity(name){let m=name.match(/^(.*?)(?:[._ -](en|eng|english|zh|zh-tw|cn|cht|chinese|中文|英文))?\.(txt|srt|vtt)$/i);if(!m)return null;let lang=(m[2]||'en').toLowerCase();return {base:m[1].trim().toLowerCase(),lang:/^(zh|zh-tw|cn|cht|chinese|中文)$/.test(lang)?'zh':'en'}}
+function audioIdentity(name){return name.replace(/\.(mp3|m4a|wav|ogg|mp4)$/i,'').trim().toLowerCase()}
+function indexTranscripts(files){transcriptIndex=new Map();for(const f of files){let key=transcriptIdentity(f.name);if(!key)continue;let rec=transcriptIndex.get(key.base)||{};rec[key.lang]=f;transcriptIndex.set(key.base,rec)}}
+function stripSubtitle(text){return text.replace(/^\uFEFF/,'').replace(/^WEBVTT[^\n]*\n?/i,'').split(/\r?\n/).filter(line=>!/^\s*\d+\s*$/.test(line)&&!/^\s*\d{2}:\d{2}(?::\d{2})?[.,]\d+\s*-->/.test(line)&&!/^\s*(NOTE|STYLE|REGION)(?:\s|$)/.test(line)).join('\n').trim()}
+async function readTranscript(file){let res=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(file.id)+'?alt=media');return stripSubtitle(await res.text())}
+async function loadTranscript(t,force=false){let seq=++transcriptRequest;if(t.type!=='cloud')return;if(!accessToken){$('transcriptStatus').textContent='請先 Google 登入，才能讀取雲端逐字稿。';return}let pair=transcriptIndex.get(audioIdentity(t.title));if(!pair){$('transcriptStatus').textContent='尚無對應逐字稿。可上傳同名 TXT / SRT / VTT 後重新同步，或直接編輯。';return}let pending=['en','zh'].filter(lang=>pair[lang]&&(force||!t[lang==='en'?'englishText':'chineseText']));if(!pending.length){$('transcriptStatus').textContent='已顯示已儲存的逐字稿。';return}try{const results=await Promise.all(pending.map(async lang=>({lang,value:await readTranscript(pair[lang])})));if(seq!==transcriptRequest||currentId!==t.id)return;for(let {lang,value} of results){let field=lang==='en'?'englishText':'chineseText';t[field]=value;$(field).value=value}save();$('transcriptStatus').textContent='已從 Google Drive 載入：'+pending.map(lang=>pair[lang].name).join('、')}catch(e){if(seq===transcriptRequest&&currentId===t.id)$('transcriptStatus').textContent='逐字稿讀取失敗：'+e.message}}
+$('reloadTranscript').onclick=async()=>{let t=get();if(!t)return;if(t.type==='cloud'){if(!accessToken){$('transcriptStatus').textContent='請先登入 Google。';return}try{indexTranscripts(await listFolderFiles(folderFrom($('folderId').value)));await loadTranscript(t,true)}catch(e){$('transcriptStatus').textContent='重新載入失敗：'+e.message}}else $('transcriptStatus').textContent='非雲端教材：請匯入逐字稿檔。'};
+$('transcriptFile').onchange=async e=>{let t=get(),file=e.target.files?.[0];if(!t||!file)return;try{let content=stripSubtitle(await file.text());let isZh=/(?:[._ -](?:zh|zh-tw|cn|cht|chinese|中文))\.(?:txt|srt|vtt)$/i.test(file.name);let field=isZh?'chineseText':'englishText';t[field]=content;$(field).value=content;save();$('transcriptStatus').textContent='已匯入：'+file.name+(isZh?'（中文）':'（英文）')}catch(err){$('transcriptStatus').textContent='匯入失敗：'+err.message}finally{e.target.value=''}};
+// Save only explicitly requested text, never upload the user's audio or notes.
+function hasDriveWriteScope(){return grantedScopes.split(/\s+/).includes(DRIVE_WRITE_SCOPE)}
+async function driveWrite(url,options){
+ if(!accessToken||Date.now()>=tokenExpiresAt-30000){clearSessionAuth();throw Error('Google 登入已過期，請在右上角「Google Drive」按「Google 連線／快速續用」。')}
+ let res=await fetch(url,{...options,headers:{...(options.headers||{}),Authorization:'Bearer '+accessToken}});
+ if(!res.ok){let reason='';try{reason=(await res.json()).error?.message||''}catch{}if(res.status===401)clearSessionAuth();throw Error('Google Drive API HTTP '+res.status+(reason?'：'+reason:'')+(res.status===403?'。若同名檔案不是由此網站建立，Google 可能不允許覆寫；請先在 Drive 更名該檔案後重試。':''))}
+ return res;
+}
+async function uploadTranscriptTxt(folderId,name,text,existing){
+ const bytes=new Blob([text],{type:'text/plain;charset=UTF-8'});
+ if(existing){
+  // drive.file permits updating files created with this OAuth app, not arbitrary existing files.
+  const res=await driveWrite('https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(existing.id)+'?uploadType=media&fields=id,name&supportsAllDrives=true',{method:'PATCH',headers:{'Content-Type':'text/plain; charset=UTF-8'},body:bytes});
+  return await res.json();
+ }
+ const boundary='toeic_transcript_'+Date.now().toString(36);
+ const body=new Blob([
+  '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n',
+  JSON.stringify({name,mimeType:'text/plain',parents:[folderId]}),
+  '\r\n--'+boundary+'\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n',
+  bytes,'\r\n--'+boundary+'--\r\n'
+ ],{type:'multipart/related; boundary='+boundary});
+ const res=await driveWrite('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body});
+ return await res.json();
+}
+// Shared categories are stored as a single JSON file in the configured Drive folder.
+// Only cloud-backed lessons are included. Never upload tokens, notes, transcripts or audio.
+const CATEGORY_CLOUD_FILENAME='TOEIC_教材分類設定.json';
+function updateCategoryCloudStatus(message){const el=$('categoryCloudStatus');if(el)el.textContent=message}
+function makeCategoryPayload(){
+ const assignments={};
+ for(const t of tracks){if(t.type==='cloud'&&t.fileId&&t.category&&categories.includes(t.category))assignments[t.fileId]=t.category}
+ return {schema:'toeic-categories-v1',version:1,updatedAt:new Date().toISOString(),categories:[...categories],assignments};
+}
+async function getCategoryCloudFile(){
+ const fid=folderFrom($('folderId').value);if(!fid)throw Error('教材資料夾設定不正確');
+ const matches=(await listFolderFiles(fid)).filter(f=>f.name===CATEGORY_CLOUD_FILENAME);
+ if(matches.length>1)throw Error('資料夾中有多份同名分類設定檔，請先在 Google Drive 整理後重試，避免修改錯誤檔案。');
+ return {fid,file:matches[0]||null};
+}
+async function fetchCategoryCloudMetadata(id){
+ const query=new URLSearchParams({fields:'id,name,modifiedTime,parents',supportsAllDrives:'true'});
+ return await (await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?'+query)).json();
+}
+async function fetchCategoryCloudData(file){
+ const response=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(file.id)+'?alt=media');
+ const text=await response.text();if(text.length>1000000)throw Error('分類設定檔過大');
+ let data;try{data=JSON.parse(text)}catch{throw Error('雲端分類設定不是有效 JSON，未修改本機資料')}
+ if(data?.schema!=='toeic-categories-v1'||data.version!==1||!Array.isArray(data.categories)||!data.assignments||typeof data.assignments!=='object'||Array.isArray(data.assignments))throw Error('分類設定檔版本不相容，未修改本機資料');
+ const clean=data.categories.filter(x=>typeof x==='string'&&x.trim()&&x.length<=40).map(x=>x.trim()).filter((x,i,a)=>a.indexOf(x)===i);
+ if(clean.length>500||Object.keys(data.assignments).length>20000)throw Error('分類設定數量超過安全限制');
+ return {categories:clean,assignments:data.assignments};
+}
+function sameCategoryPayload(payload){
+ const ours=makeCategoryPayload();
+ if(JSON.stringify(ours.categories)!==JSON.stringify(payload.categories))return false;
+ for(const t of tracks.filter(t=>t.type==='cloud'&&t.fileId)){
+  if((ours.assignments[t.fileId]||'')!==(typeof payload.assignments[t.fileId]==='string'?payload.assignments[t.fileId]:''))return false;
+ }
+ return true;
+}
+function applyCloudCategories(data){
+ categories=[...data.categories];
+ for(const t of tracks)if(t.type==='cloud'&&t.fileId){const c=data.assignments[t.fileId];t.category=typeof c==='string'&&categories.includes(c)?c:''}
+ try{localStorage.setItem(categoryKey,JSON.stringify(categories))}catch{}
+ save();refreshCategoryUI();render();categoryCloudDirty=false;
+}
+async function loadCategoriesFromDrive({automatic=false}={}){
+ if(categoryCloudLoading)return false;
+ if(!accessToken){updateCategoryCloudStatus('請先在右上角登入 Google Drive。');return false}
+ categoryCloudLoading=true;$('loadCategoryCloud').disabled=true;
+ try{
+  const {file}=await getCategoryCloudFile();
+  if(!file){categoryCloudFileId='';categoryCloudVersion='';updateCategoryCloudStatus('Google Drive 尚無分類設定；在這台裝置整理好後按「儲存分類至 Drive」。');return false}
+  const metadata=await fetchCategoryCloudMetadata(file.id);
+  const data=await fetchCategoryCloudData(file);
+  const hasLocal=categories.length>0||tracks.some(t=>t.type==='cloud'&&t.category);
+  if(hasLocal&&!sameCategoryPayload(data)){
+   if(automatic){updateCategoryCloudStatus('雲端已有分類設定，且與本機不同。請按「讀取雲端分類」比較並確認，或先儲存本機設定。');return false}
+   if(!confirm('讀取雲端分類會取代這台裝置的分類名稱與雲端教材歸類（不影響筆記、逐字稿及音檔）。確定繼續？'))return false;
+  }
+  applyCloudCategories(data);categoryCloudFileId=file.id;categoryCloudVersion=metadata.modifiedTime||'';
+  updateCategoryCloudStatus('✅ 已從 Google Drive 讀取分類（'+new Date().toLocaleString('zh-TW')+'）。');return true;
+ }catch(e){updateCategoryCloudStatus('❌ 讀取分類失敗：'+e.message);return false}
+ finally{categoryCloudLoading=false;$('loadCategoryCloud').disabled=false}
+}
+async function saveCategoriesToDrive(){
+ if(categoryCloudLoading)return;
+ if(!accessToken){updateCategoryCloudStatus('請先在右上角登入 Google Drive。');return}
+ if(!hasDriveWriteScope()){updateCategoryCloudStatus('缺少 Drive 寫入權限，請在右上角重新授權。');return}
+ categoryCloudLoading=true;$('saveCategoryCloud').disabled=true;
+ try{
+  const {fid,file}=await getCategoryCloudFile();
+  if(file){
+   const metadata=await fetchCategoryCloudMetadata(file.id);
+   const remoteVersion=metadata.modifiedTime||'';
+   if((categoryCloudFileId!==file.id||categoryCloudVersion!==remoteVersion)&&!confirm('偵測到 Google Drive 分類設定與上次讀取版本不同（可能由其他裝置修改）。覆寫會取代雲端設定。建議先取消並按「讀取雲端分類」。確定仍要覆寫？'))return;
+  }
+  const payload=JSON.stringify(makeCategoryPayload(),null,2);
+  const result=await uploadTranscriptTxt(fid,CATEGORY_CLOUD_FILENAME,payload,file);
+  if(!result?.id)throw Error('上傳後未取得檔案 ID');
+  const metadata=await fetchCategoryCloudMetadata(result.id);
+  if(metadata.name!==CATEGORY_CLOUD_FILENAME||!metadata.parents?.includes(fid))throw Error('檔案未能確認位於教材資料夾');
+  categoryCloudFileId=result.id;categoryCloudVersion=metadata.modifiedTime||'';categoryCloudDirty=false;
+  updateCategoryCloudStatus('✅ 分類已存至 Google Drive，可在其他裝置登入並同步（'+new Date().toLocaleString('zh-TW')+'）。');
+ }catch(e){updateCategoryCloudStatus('❌ 儲存分類失敗：'+e.message)}
+ finally{categoryCloudLoading=false;$('saveCategoryCloud').disabled=false}
+}
+$('saveCategoryCloud').onclick=()=>void saveCategoriesToDrive();
+$('loadCategoryCloud').onclick=()=>void loadCategoriesFromDrive();
+let savingTranscript=false;
+const AUTO_UPLOAD_KEY='toeic_auto_upload_transcript_v1';
+try{$('autoUploadTranscript').checked=localStorage.getItem(AUTO_UPLOAD_KEY)==='true'}catch{}
+$('autoUploadTranscript').onchange=()=>{try{localStorage.setItem(AUTO_UPLOAD_KEY,String($('autoUploadTranscript').checked))}catch{}};
+async function saveTranscriptToDrive({automatic=false,target=null}={}){
+ const t=target||get(),out=$('transcriptStatus');
+ const report=m=>{out.textContent=m};
+ if(!t||t.type!=='cloud'){if(!automatic)report('請選擇從 Google Drive 同步的音檔，無法將本機音檔儲存到指定教材資料夾。');return false}
+ if(!accessToken||tokenExpiresAt&&Date.now()>=tokenExpiresAt-30000){report('尚未取得有效的 Google 授權。請在右上角「Google Drive」按「重新授權」，再返回儲存。');return false}
+ if(!hasDriveWriteScope()){report('目前的 Google 登入權杖只有舊版讀取權限，無法寫入教材資料夾。請在右上角「Google Drive」按「重新授權」，同意 Drive 讀寫權限。');return false}
+ if(savingTranscript){report('前一次雲端儲存仍在進行中，請完成後再試。');return false}
+ const en=String(t.englishText||'').trim(),zh=String(t.chineseText||'').trim();
+ if(!en&&!zh){report('英文逐字稿和中文翻譯都是空白，沒有可儲存內容。');return false}
+ const folderId=folderFrom($('folderId').value);
+ if(!folderId){report('教材資料夾 ID 無效，請檢查網站設定。');return false}
+ const selectedId=t.id;
+ savingTranscript=true;$('saveTranscriptDrive').disabled=true;
+ let saved=[];
+ try{
+  report('正在向 Google Drive 查詢教材資料夾…');
+  const files=await listFolderFiles(folderId);
+  const stem=t.title.replace(/\.(mp3|m4a|wav|ogg|mp4)$/i,'');
+  const jobs=[['en',en],['zh',zh]].filter(([,value])=>value).map(([lang,value])=>{
+   const name=stem+'.'+lang+'.txt';return {name,value,existing:files.find(f=>f.name.toLowerCase()===name.toLowerCase())};
+  });
+  const existingNames=jobs.filter(j=>j.existing).map(j=>j.name);
+  if(automatic&&existingNames.length){report('已有同名逐字稿：'+existingNames.join('、')+'。為避免自動覆蓋舊內容，本次僅保存在瀏覽器。請按「儲存逐字稿至 Google Drive」確認覆寫。');return false}
+  if(!automatic){
+   if(existingNames.length&&!confirm('Google Drive 已有同名逐字稿：\n'+existingNames.join('\n')+'\n\n是否覆寫？')){report('已取消覆寫，瀏覽器中的逐字稿仍保留。');return false}
+   if(!confirm('確定將 '+jobs.map(j=>j.name).join('、')+' 儲存至 Google Drive 教材資料夾？')){report('已取消上傳。');return false}
+  }
+  for(const job of jobs){
+   report('正在上傳 '+job.name+'…');
+   let result=await uploadTranscriptTxt(folderId,job.name,job.value,job.existing);
+   if(!result?.id)throw Error(job.name+' 上傳後未取得 Google Drive 檔案 ID');
+   // Verify actual file metadata rather than assuming a successful upload request means success.
+   const qs=new URLSearchParams({fields:'id,name,parents,webViewLink',supportsAllDrives:'true'});
+   const check=await(await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(result.id)+'?'+qs)).json();
+   if(check.name!==job.name||!(check.parents||[]).includes(folderId))throw Error(job.name+' 已上傳，但未能確認位於指定教材資料夾。請檢查 Google Drive。');
+   saved.push(job.name);
+  }
+  indexTranscripts(await listFolderFiles(folderId));
+  t.lastDriveSaveAt=Date.now();save();
+  report('✅ 已成功存入 Google Drive 教材資料夾：'+saved.join('、')+'（'+new Date().toLocaleString('zh-TW')+'）');
+  return true;
+ }catch(e){
+  let detail=String(e?.message||e);
+  if(/403|insufficientPermissions|insufficient authentication scopes/i.test(detail))detail+='。請在右上角「Google Drive」按「重新授權」，同意 Drive 讀寫權限；若使用公司帳號，可能須由管理員允許。';
+  if(/404|File not found/i.test(detail))detail+='。請確認登入帳號對教材資料夾具有編輯權限。';
+  report('❌ 雲端儲存失敗'+(saved.length?'（已成功：'+saved.join('、')+'）':'')+'：'+detail);
+  return false;
+ }finally{savingTranscript=false;$('saveTranscriptDrive').disabled=!(get()&&get().type==='cloud')}
+}
+$('saveTranscriptDrive').onclick=()=>{const t=get();if(t){t.englishText=$('englishText').value;t.chineseText=$('chineseText').value;save()}void saveTranscriptToDrive()};
+async function syncDrive(){if(!accessToken){status('請先按「Google 連線／快速續用」，再同步資料夾。',true);return}let fid=folderFrom($('folderId').value);if(!fid){status('請填入正確的 Google Drive 資料夾 ID 或連結。',true);return}saveConfig();$('sync').disabled=true;try{let allFiles=await listFolderFiles(fid);indexTranscripts(allFiles);let files=allFiles.filter(f=>/\.(mp3|m4a|wav|ogg)$/i.test(f.name)||/^audio\//i.test(f.mimeType));let existing=new Map(tracks.filter(t=>t.type==='cloud').map(t=>[t.fileId,t]));let updated=files.map(f=>{let t=existing.get(f.id);return t?{...t,title:f.name}:{id:'cloud_'+f.id,type:'cloud',fileId:f.id,title:f.name,part:/part\s*([1-4])/i.test(f.name)?'Part '+f.name.match(/part\s*([1-4])/i)[1]+' '+['','照片描述','應答問題','簡短對話','簡短獨白'][Number(f.name.match(/part\s*([1-4])/i)[1])]:'Part 1 照片描述',notes:'',englishText:'',chineseText:'',done:false}});let keep=tracks.filter(t=>t.type!=='cloud');tracks=[...updated,...keep];save();refreshCategoryUI();if(!get()&&tracks.length)select(tracks[0].id);else {render();let t=get();if(t)void loadTranscript(t)}status('同步成功：找到 '+files.length+' 個音檔、'+allFiles.filter(f=>transcriptIdentity(f.name)).length+' 個逐字稿。同步時間 '+new Date().toLocaleString('zh-TW'));await loadCategoriesFromDrive({automatic:true})}catch(e){status('同步失敗：'+e.message,true)}finally{$('sync').disabled=false}}
+$('sync').onclick=()=>{if(accessToken)void syncDrive();else requestGoogleToken(false)};
+$('disconnect').onclick=()=>{if(accessToken&&window.google?.accounts?.oauth2)google.accounts.oauth2.revoke(accessToken,()=>{});clearSessionAuth();tokenClient=null;try{localStorage.removeItem(AUTH_PREFERENCE_KEY)}catch{}audio.pause();status('已登出並清除本分頁的 Google 授權。教材與筆記仍保留在此瀏覽器。')};
+$('clearCloud').onclick=()=>{if(!confirm('清除本機保存的雲端教材清單及相關筆記？不會刪除 Google Drive 檔案。'))return;tracks=tracks.filter(t=>t.type!=='cloud');save();refreshCategoryUI();select(tracks[0]?.id||null);status('已清空本機雲端教材清單')};
 async function loadCloudAudio(t){if(!accessToken){status('雲端音檔需要重新 Google 登入授權。',true);return}if(cloudLoading)return;cloudLoading=true;$('play').disabled=true;$('play').textContent='載入中…';let chosen=t.id;try{let response=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(t.fileId)+'?alt=media');let blob=await response.blob();if(currentId!==chosen)return;if(cloudBlobUrl)URL.revokeObjectURL(cloudBlobUrl);cloudBlobUrl=URL.createObjectURL(blob);audio.src=cloudBlobUrl;audio.playbackRate=Number($('speed').value);await audio.play()}catch(e){status('播放失敗：'+e.message,true);if(currentId===chosen)$('play').textContent='▶ 重試播放'}finally{cloudLoading=false;$('play').disabled=false;if(currentId===chosen&&audio.paused)$('play').textContent='▶ 播放'}}
 if(tracks.length)select(tracks[0].id);else render();
 
-</script></body></html>
+</script>
+<script>
+// Browser-only speech-to-text: no API key or server-side secret.
+// Local, browser-side EN -> ZH translation. No transcript text is sent to a translation API.
+const AUTO_TRANSLATE_KEY='toeic_auto_translate_zh_v1';
+try{$('autoTranslateChinese').checked=localStorage.getItem(AUTO_TRANSLATE_KEY)!=='false'}catch{$('autoTranslateChinese').checked=true}
+$('autoTranslateChinese').onchange=()=>{try{localStorage.setItem(AUTO_TRANSLATE_KEY,String($('autoTranslateChinese').checked))}catch{}};
+let translator=null,translationLoading=null,translationBusy=false,zhConverter=null,converterAttempted=false;
+function translateNote(message){$('translateStatus').textContent=message;console.info('[TOEIC Translate]',message)}
+async function loadTranslator(){
+ if(translator)return translator;
+ if(!translationLoading)translationLoading=(async()=>{
+  translateNote('正在準備英文→中文翻譯模型，初次使用須下載模型，請保持網路連線…');
+  // MarianMT/OPUS model uses the proven Transformers.js v2 translation pipeline.
+  const {pipeline,env}=await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/+esm');
+  env.allowLocalModels=false;
+  return pipeline('translation','Xenova/opus-mt-en-zh',{progress_callback:p=>{
+   if(p.status==='progress'&&Number.isFinite(p.progress))translateNote('正在下載翻譯模型：'+Math.round(p.progress)+'%');
+  }});
+ })().catch(err=>{translationLoading=null;throw err});
+ translator=await translationLoading;
+ return translator;
+}
+async function getTraditionalConverter(){
+ if(converterAttempted)return zhConverter;
+ converterAttempted=true;
+ try{
+  const lib=await import('https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/+esm');
+  const factory=lib.Converter||lib.default?.Converter;
+  if(typeof factory==='function')zhConverter=factory({from:'cn',to:'tw'});
+ }catch(e){console.warn('[TOEIC Translate] 繁體轉換程式載入失敗',e)}
+ return zhConverter;
+}
+function translationChunks(source){
+ // Small chunks avoid exceeding Marian's input token limit on long transcripts.
+ const normalized=String(source||'').replace(/\r\n?/g,'\n').trim();
+ const sentences=normalized.match(/[^.!?\n]+(?:[.!?]+|\n|$)/g)||[normalized];
+ const chunks=[];let pending='';
+ const push=()=>{if(pending.trim())chunks.push(pending.trim());pending=''};
+ for(const sentence of sentences){
+  const words=sentence.trim().split(/\s+/).filter(Boolean);
+  if(!words.length)continue;
+  for(let i=0;i<words.length;i+=65){
+   let part=words.slice(i,i+65).join(' ');
+   if(pending&&(pending+' '+part).length>350)push();
+   pending+=(pending?' ':'')+part;
+   if(pending.length>=300)push();
+  }
+ }
+ push();return chunks;
+}
+async function translateTrack(t,{automatic=false}={}){
+ if(translationBusy){translateNote('翻譯正在進行，請完成後再試。');return false}
+ const english=String(t?.englishText||'').trim();
+ if(!english){translateNote('沒有英文逐字稿，請先辨識或輸入英文文字。');return false}
+ if(automatic&&String(t.chineseText||'').trim()){
+  translateNote('已有中文翻譯，為避免覆蓋已編輯內容，本次保留原文。可按「重新翻譯成中文」更新。');
+  return false;
+ }
+ if(!automatic&&String(t.chineseText||'').trim()&&!confirm('重新翻譯會取代這份教材原有的中文翻譯，確定繼續？'))return false;
+ translationBusy=true;$('translateEnglish').disabled=true;
+ const prior=$('translateEnglish').textContent;$('translateEnglish').textContent='⏳ 翻譯中…';
+ try{
+  const model=await loadTranslator();
+  const chunks=translationChunks(english);
+  if(!chunks.length)throw Error('沒有可翻譯的英文內容');
+  const translated=[];
+  for(let i=0;i<chunks.length;i++){
+   translateNote('正在翻譯英文逐字稿：'+(i+1)+' / '+chunks.length+' 段…');
+   const output=await model(chunks[i],{max_new_tokens:256});
+   const value=String((Array.isArray(output)?output[0]:output)?.translation_text||'').trim();
+   if(!value)throw Error('第 '+(i+1)+' 段翻譯結果為空白');
+   translated.push(value);
+  }
+  let chinese=translated.join('\n');
+  const convert=await getTraditionalConverter();
+  if(convert)chinese=convert(chinese);
+  t.chineseText=chinese;
+  if(currentId===t.id)$('chineseText').value=chinese;
+  save();
+  translateNote(convert?'✅ 已完成繁體中文翻譯並儲存至瀏覽器。請核對內容。':'⚠ 中文翻譯已完成，但繁體字轉換元件載入失敗，可能包含簡體字；請檢查網路後再翻譯。');
+  return true;
+ }catch(e){translateNote('❌ 自動翻譯失敗：'+(e?.message||String(e))+'。英文逐字稿仍已保留，可稍後按「重新翻譯成中文」。');return false}
+ finally{translationBusy=false;$('translateEnglish').disabled=false;$('translateEnglish').textContent=prior}
+}
+$('translateEnglish').onclick=async()=>{
+ const t=get();if(!t){translateNote('請先選擇教材。');return}
+ t.englishText=$('englishText').value;t.chineseText=$('chineseText').value;save();
+ const translated=await translateTrack(t);
+ if(translated&&t.type==='cloud'&&$('autoUploadTranscript').checked){
+  $('transcriptStatus').textContent='翻譯完成，正在嘗試儲存至 Google Drive…';
+  await saveTranscriptToDrive({automatic:true,target:t});
+ }
+};
+
+let whisperPipeline=null,whisperLoading=null,asrBusy=false;
+function asrNote(msg){$('asrStatus').textContent=msg;console.info('[TOEIC ASR]',msg)}
+async function getWhisper(){
+ if(whisperPipeline)return whisperPipeline;
+ if(!whisperLoading)whisperLoading=(async()=>{
+   asrNote('正在下載／初始化英文 Whisper 模型；第一次使用需要網路及較長時間…');
+   const {pipeline,env}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm');
+   env.allowLocalModels=false;
+   return await pipeline('automatic-speech-recognition','onnx-community/whisper-tiny.en',{device:'wasm',dtype:'q8',progress_callback:p=>{if(p.status==='progress'&&Number.isFinite(p.progress))asrNote('正在下載語音模型：'+Math.round(p.progress)+'%（'+(p.file||'模型檔')+'）');else if(p.status==='initiate')asrNote('正在準備語音模型：'+(p.file||'下載中…'));else if(p.status==='ready')asrNote('模型下載完成，準備辨識…')}});
+ })().catch(e=>{whisperLoading=null;throw e});
+ whisperPipeline=await whisperLoading;return whisperPipeline;
+}
+async function transcriptionBytes(t){
+ if(t.type==='cloud'){
+  if(!accessToken)throw Error('請先登入 Google，取得讀取音檔的授權。');
+  let res=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(t.fileId)+'?alt=media');
+  return await res.arrayBuffer();
+ }
+ if(t.type==='local'){
+  let res=await fetch(t.src);if(!res.ok)throw Error('無法讀取本機音檔');return await res.arrayBuffer();
+ }
+ throw Error('Google Drive 分享連結無法直接辨識；請使用 API 同步的音檔或本機音檔。');
+}
+async function decode16k(buffer){
+ const ctx=new (window.AudioContext||window.webkitAudioContext)();
+ try{
+  let decoded=await ctx.decodeAudioData(buffer);
+  if(decoded.duration>1200)throw Error('為避免瀏覽器記憶體不足，目前每次支援最長 20 分鐘的音檔。');
+  const length=Math.ceil(decoded.duration*16000);
+  const offline=new OfflineAudioContext(1,length,16000);
+  const source=offline.createBufferSource();source.buffer=decoded;source.connect(offline.destination);source.start(0);
+  let rendered=await offline.startRendering();return rendered.getChannelData(0).slice();
+ }finally{await ctx.close()}
+}
+window.addEventListener('error',e=>{if(asrBusy)asrNote('語音辨識發生錯誤：'+e.message)});
+$('prepareWhisper').onclick=async()=>{
+ const btn=$('prepareWhisper');btn.disabled=true;btn.textContent='⏳ 正在準備辨識模型…';
+ try {asrNote('已開始測試模型下載，正在連線至 jsDelivr…');await getWhisper();asrNote('✅ 英文辨識模型已準備完成，現在可以選擇 MP3 產生逐字稿。')}
+ catch(e){asrNote('❌ 模型載入失敗：'+(e?.message||String(e))+'。請檢查 jsDelivr / Hugging Face 是否可連線，或按 F12 查看 Console。')}
+ finally {btn.disabled=false;btn.textContent='⬇ 測試／下載辨識模型'}
+};
+$('transcribeAudio').onclick=async()=>{
+ asrNote('已收到點擊，正在檢查音檔…');
+ const t=get();if(!t){asrNote('請先在教材清單選擇 MP3 音檔。');return}
+ if(asrBusy)return;
+ if(t.englishText && !confirm('已有英文逐字稿。確定以語音辨識結果覆蓋原有內容？'))return;
+ asrBusy=true;$('transcribeAudio').disabled=true;$('transcribeAudio').textContent='⏳ 正在產生逐字稿…';
+ const selectedId=t.id;
+ try{
+  asrNote('正在取得並解碼音檔…');
+  const bytes=await transcriptionBytes(t);
+  const samples=await decode16k(bytes);
+  const model=await getWhisper();
+  asrNote('正在辨識英文，請保持頁面開啟（長音檔需要較長時間）…');
+  const result=await model(samples,{chunk_length_s:30,stride_length_s:5,return_timestamps:false});
+  const value=String(result?.text||'').trim();
+  if(!value)throw Error('辨識結果為空白，請檢查音檔是否有人聲。');
+  t.englishText=value;save();
+  if(currentId===selectedId)$('englishText').value=value;
+  asrNote('辨識完成：英文逐字稿已保存至瀏覽器，請核對辨識內容。');
+  // Translate only after successful English ASR; don't risk losing the recognized English on translation errors.
+  if($('autoTranslateChinese').checked){
+   await translateTrack(t,{automatic:true});
+  }else translateNote('已完成英文辨識；自動翻譯已關閉，可隨時按「重新翻譯成中文」。');
+  if(t.type==='cloud'&&$('autoUploadTranscript').checked){
+   $('transcriptStatus').textContent='辨識完成，正在自動上傳逐字稿至 Google Drive…';
+   const uploaded=await saveTranscriptToDrive({automatic:true,target:t});
+   asrNote(uploaded?'✅ 英文辨識完成，並已上傳可用的逐字稿至 Google Drive。請核對中英文內容。':'辨識完成，但尚未自動存回 Google Drive。請查看逐字稿上方提示，必要時手動儲存。');
+  }
+ }catch(e){asrNote('辨識失敗：'+(e?.message||String(e))+'。可改用 TXT / SRT 字幕匯入。')}
+ finally{asrBusy=false;$('transcribeAudio').disabled=false;$('transcribeAudio').textContent='🎙 從音檔產生英文逐字稿'}
+};
+console.info('[TOEIC ASR] 語音辨識按鈕已完成事件綁定；可使用「測試／下載辨識模型」獨立測試。');
+</script>
+<script>
+function showView(view){
+  // Both columns remain visible: never hide the player, transcript or lesson list.
+  const target=view==='materials' ? $('materialsSection') : $('playerSection');
+  if(window.matchMedia('(max-width: 850px)').matches){
+    target.scrollIntoView({behavior:'smooth',block:'start'});
+  }else if(view==='materials'){
+    $('search').focus({preventScroll:true});
+  }else{
+    $('playerSection').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+$('goPlayer').onclick=()=>showView('player');
+$('goMaterials').onclick=()=>showView('materials');
+$('chooseMaterial').onclick=()=>showView('materials');
+$('backToPlayer').onclick=()=>showView('player');
+
+(function(){
+ const info=document.getElementById('driveInfo'),chip=document.getElementById('cloudState');
+ if(!info||!chip)return;
+ function refreshCloudChip(){
+  const text=info.textContent||'';
+  const connected=!!(typeof accessToken!=='undefined'&&accessToken&&(!tokenExpiresAt||Date.now()<tokenExpiresAt-30000));
+  chip.textContent=connected?'已連線':(/正在|同步中|授權中/.test(text)?'處理中':'未連線');
+  chip.classList.toggle('connected',connected);
+  chip.title=text;
+ }
+ new MutationObserver(refreshCloudChip).observe(info,{childList:true,characterData:true,subtree:true});
+ refreshCloudChip();
+})();
+</script><link rel="stylesheet" href="guest.css"><script src="guest-catalog.js"></script><script src="guest-texts.js"></script><script src="guest.js"></script></body></html>

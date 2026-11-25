@@ -1,0 +1,31 @@
+body.guest-mode main,body.guest-mode .cloud-mini{display:none!important}
+#guestSection{max-width:1200px;margin:24px auto;padding:0 16px;color:#17243b}
+#guestSection[hidden]{display:none!important}
+#guestSection .guest-layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px}
+#guestSection .guest-transcripts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#guestSection iframe{border:1px solid #d8e7e6;background:white;width:100%;border-radius:12px}
+#guestSection .guest-text-frame{height:430px}
+#guestSection .guest-audio-frame{height:140px}
+#guestSection .guest-folder-frame{height:520px;margin-top:12px}
+#guestSection .guest-list{max-height:670px;overflow:auto;margin-top:12px}
+#guestSection .guest-track{display:block;width:100%;text-align:left;margin:6px 0;background:#f0f7f6;color:#24416e;overflow-wrap:anywhere}
+#guestSection .guest-track[aria-pressed=true]{background:#087e74;color:white}
+#guestSection .guest-track small{display:block;margin-top:4px;opacity:.8}
+#guestSection .guest-empty{padding:24px;background:#f5f8fa;border-radius:10px;color:#66758c}
+#guestSection a{color:#087e74;text-underline-offset:3px}
+#guestSection summary{cursor:pointer;font-weight:700}
+#guestSection .guest-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+#guestSection .guest-link-form{display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+#guestSection .guest-link-form label{flex:1;min-width:200px}
+#guestSection .guest-link-form button{margin-bottom:6px}
+@media(max-width:800px){#guestSection .guest-layout,#guestSection .guest-transcripts{grid-template-columns:1fr}#guestSection .guest-list{max-height:220px}#guestSection .guest-text-frame{height:350px}}
+body .view-nav{display:flex!important;margin:16px auto 0;max-width:1200px;flex-wrap:wrap}
+#guestSection .guest-player{padding:18px;background:#edf7f5;border:1px solid #cce6e1;border-radius:14px;margin-bottom:20px}
+#guestSection .guest-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#guestSection .guest-controls button{font-size:13px;padding:9px}
+#guestSection .guest-controls label{margin:0}
+#guestSection .guest-check{display:flex;gap:5px;align-items:center}
+#guestSection .guest-check input{width:auto}
+#guestSection .guest-editor{min-height:380px;font-size:17px;line-height:1.8;background:#fffefa;resize:vertical}
+#guestSection .guest-edit-actions{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+#guestSection .guest-edit-actions button{font-size:13px}
